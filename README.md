@@ -114,7 +114,7 @@ This internship has enhanced my ability to think critically and develop function
 
 - 💼 [LinkedIn: Babin Bid](https://www.linkedin.com/in/babin-bid-853728293)  
 - 🌐 [GitHub: KGFCH2](https://github.com/KGFCH2)  
-- ✉️ **Email:** babin.bid@stu.adamasuniversity.ac.in  
+- ✉️ **Email:** babinbid05@gmail.com 
 
 ---
 
