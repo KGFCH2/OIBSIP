@@ -127,9 +127,10 @@ async function calculate() {
         const inch = parseInt(heightInInput?.value) || 0;
         if (ft <= 0 && inch <= 0) { alert('Enter height in feet and/or inches'); return }
         if (inch < 0 || inch > 11) { alert('Inches must be between 0 and 11'); return }
-        // send both feet and inches to backend
-        payload.height_ft = ft;
-        payload.height_in = inch;
+        // convert feet+inches -> meters on client to avoid ambiguity and ensure exact conversion
+        const total_inches = (ft * 12) + inch;
+        const height_m = total_inches * 0.0254; // 1 inch = 0.0254 m
+        payload.height_m = parseFloat(height_m.toFixed(4));
     }
 
     // Show loading
