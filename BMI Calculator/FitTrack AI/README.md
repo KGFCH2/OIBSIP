@@ -1,54 +1,47 @@
-# FitTrack AI — Interactive GUI BMI Calculator (Tkinter)
+# FitTrack AI — BMI Calculator Web App
 
-Project: Interactive GUI BMI Calculator using Python Tkinter.
+Project: Interactive web-based BMI Calculator using Flask and vanilla JavaScript.
 
-Overview
---------
-This project demonstrates an intermediate-level desktop GUI built with Python 3 and Tkinter. It includes:
-- A particle animated background
-- Dark/Light theme toggle with persistence
-- A card container that simulates a flip to reveal results
-- Input validation and helpful alerts
-- Hover/glow effects and a soft click sound on Windows
+## Overview
+This project is a web application for calculating Body Mass Index (BMI) with a modern, animated UI. It features:
+- Particle animated background
+- Responsive card-based interface with flip animation
+- Support for multiple height/weight units
+- Real-time BMI calculation and categorization
+- Clean, modern design with CSS animations
 
-Structure
----------
-- `backend/` — Python application and tests
-  - `app.py` — Main Tkinter GUI application
-  - `bmi.py` — BMI calculation and categorization logic (tested)
-  - `test_bmi.py` — pytest unit tests for the logic
-  - `requirements.txt` — test/runtime requirements
-- `frontend/` — placeholder for assets (icons, sounds). See `ASSETS_README.txt`.
+## Structure
+- `frontend/` — Static web frontend files
+  - `index.html` — Main HTML page
+  - `styles.css` — Styling and animations
+  - `script.js` — Client-side JavaScript for interactions
+- `server/` — Flask backend server
+  - `app.py` — Main Flask application with BMI API
+  - `requirements.txt` — Python dependencies
 
-How to run
-----------
-1. Ensure you have Python 3.x installed and available on PATH.
-2. (Optional) Create a virtual environment and activate it.
-3. Install test dependencies if you want to run tests:
+## How to Run
+1. Ensure you have Python 3.x installed.
+2. Install dependencies:
+   ```cmd
+   cd "d:\Vs Code\PROJECT\OIBSIP\BMI Calculator\FitTrack AI\server"
+   pip install -r requirements.txt
+   ```
+3. Run the Flask server:
+   ```cmd
+   cd "d:\Vs Code\PROJECT\OIBSIP\BMI Calculator\FitTrack AI"
+   python -m server.app
+   ```
+4. Open your browser and go to `http://127.0.0.1:5000`
 
-```cmd
-cd "d:\\Vs Code\\PROJECT\\OIBSIP\\BMI Calculator\\FitTrack AI\\backend"
-python -m pip install -r requirements.txt
-```
+## API
+The server exposes a `/api/bmi` endpoint that accepts POST requests with JSON data:
+- `weight_kg`: Weight in kilograms (or `weight_lb` for pounds)
+- `height_m`: Height in meters (or `height_ft` for feet, or `height_ft_int` and `height_in` for feet/inches)
 
-4. Run the app:
+Returns JSON with BMI value, category, color, and message.
 
-```cmd
-cd "d:\\Vs Code\\PROJECT\\OIBSIP\\BMI Calculator\\FitTrack AI"
-python -m backend.app
-```
+## Notes
+- Originally developed as a Tkinter desktop app, now converted to a web app using Flask.
+- The flip animation is handled via CSS and JavaScript for smooth transitions.
 
-5. Run tests:
-
-```cmd
-cd "d:\\Vs Code\\PROJECT\\OIBSIP\\BMI Calculator\\FitTrack AI"
-python -m pytest -q
-```
-
-Notes & Extensions
-------------------
-- The flip animation is simulated by shrinking/expanding the card window width and swapping the front/back content. This keeps the solution simple and cross-platform with Tkinter.
-- To add an app icon or sounds, place them in `frontend/` and update `backend/app.py` accordingly.
-- For more advanced visuals consider integrating Pillow for image effects or using an embedded browser (webview) for CSS/JS-powered UIs.
-
-License: MIT (adapt as you prefer)
+License: MIT
