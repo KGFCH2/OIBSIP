@@ -36,7 +36,7 @@ The program emphasized **coding proficiency**, **open-source collaboration**, an
 |----------------|:--------:|-------------|
 | 🗣️ Voice Assistant | ⚙️ In Progress | A Python-based voice assistant capable of responding to user voice commands, telling time/date, and performing simple tasks. |
 | ⚖️ BMI Calculator | ✅ Completed | A GUI-based BMI calculator that takes height and weight inputs, calculates BMI, and classifies health categories. |
-| 🔐 Random Password Generator | ⏳ Pending | A Python tool to generate strong, random passwords with customization options. |
+| 🔐 Random Password Generator | ✅ Completed | A Python tool to generate strong, random passwords with customization options. |
 | 🌦️ Weather App | ⏳ Pending | A Python GUI app using APIs to display live weather updates for any location. |
 | 💬 Chat Application | ⏳ Pending | A real-time chat app using Python sockets, enabling message exchange between users. |
 
@@ -84,9 +84,43 @@ A **Graphical BMI Calculator** built in Python using **Tkinter**.
 
 ---
 
+## 🔐 Project 3 — Random Password Generator (✅ Completed)
+
+A comprehensive **Random Password Generator** with both CLI and GUI versions built in Python.
+
+**Features:**
+- **CLI Version**: Command-line tool with customizable password generation
+- **GUI Version**: Modern Tkinter interface with advanced features
+- **Security Rules**: Enforced strong password criteria
+- **Clipboard Integration**: One-click copying to clipboard
+- **Character Customization**: Exclude specific characters, choose character types
+- **Password Strength**: Real-time validation and scoring
+- **Batch Generation**: Generate multiple passwords at once
+
+**Key Concepts Covered:**
+- Randomization algorithms
+- User input validation
+- Character set management
+- GUI design with Tkinter
+- Security best practices
+- Clipboard operations
+- Password strength analysis
+
+**Usage:**
+```bash
+# CLI Version
+python password_generator_cli.py -l 16 -v
+
+# GUI Version
+python password_generator_gui.py
+```
+
+**Concepts Covered:** Randomization, input validation, character handling, GUI design, security rules, clipboard integration, customization.
+
+---
+
 ## 🧩 Upcoming Projects
 
-- 🔐 **Random Password Generator** — Secure password creation tool with GUI.  
 - 🌦️ **Weather App** — Real-time weather updates using OpenWeatherMap API.  
 - 💬 **Chat Application** — Socket-based real-time chat app.
 
