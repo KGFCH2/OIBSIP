@@ -1,9 +1,5 @@
 # SkyCast AI - Intelligent Real-Time Weather Forecasting App
 
-**Note:** For deployment compatibility, the deployable version is now in the `skycast_ai` folder in the repository root.
-
-Please use `skycast_ai/app.py` as the main file for Streamlit Cloud deployment.
-
 SkyCast AI is a personalized atmospheric dashboard that fetches real-time weather data, forecasts, and visual insights using APIs. It evolves into an intelligent assistant that predicts patterns, gives advice, and alerts users to extreme weather.
 
 ## Features
@@ -24,9 +20,18 @@ SkyCast AI is a personalized atmospheric dashboard that fetches real-time weathe
 - **Geopy** for geolocation (optional)
 - **OpenWeatherMap API** for weather data
 
-## Setup Instructions
+## Deployment on Streamlit Cloud
 
-1. **Clone or Download** the project files.
+1. **Push your code** to GitHub (this repo).
+2. **Go to [share.streamlit.io](https://share.streamlit.io)**.
+3. **Connect your GitHub account** and select the `OIBSIP` repository.
+4. **Set the main file path** to `skycast_ai/app.py`.
+5. **Add your OpenWeatherMap API key** in the app secrets:
+   - Go to app settings > Secrets
+   - Add: `OPENWEATHER_API_KEY = "your_api_key_here"`
+6. **Deploy!**
+
+## Local Development
 
 2. **Install Dependencies**:
    ```
