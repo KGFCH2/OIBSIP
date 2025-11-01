@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, join_room, leave_room, emit
 import os
+import base64
 from datetime import datetime
 
 app = Flask(__name__)
@@ -62,7 +63,7 @@ def handle_upload(data):
     filedata = data['filedata']
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     with open(filepath, 'wb') as f:
-        f.write(filedata)
+        f.write(base64.b64decode(filedata))
     msg = {
         'username': username,
         'msg': f'<img src="/static/uploads/{filename}" alt="image" style="max-width:200px;">',
