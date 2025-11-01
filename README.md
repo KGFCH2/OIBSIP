@@ -1,4 +1,4 @@
-# 🐍 OIBSIP - Oasis Infobyte Python Programming Internship
+# 💻 OIBSIP - Oasis Infobyte Python Programming Internship 💻
 
 Welcome to my **Python Programming Internship Repository** under **Oasis Infobyte (OIBSIP)**.  
 This repository contains all my internship projects, code files, and documentation developed during the 1-month internship program.
