@@ -7,12 +7,12 @@ This repository contains all my internship projects, code files, and documentati
 
 ## 🚀 Internship Overview
 
-**Organization:** [Oasis Infobyte](https://www.oasisinfobyte.com)  
-**Internship Title:** Python Programming Internship  
-**Intern ID:** OIB/N1/IP380  
-**Intern:** Babin Bid  
-**Duration:** 1 Month (November 2025 to December 2025)  
-**Status:** ✅ Active  
+**🏢 Organization:** [Oasis Infobyte](https://www.oasisinfobyte.com)  
+**💼 Internship Title:** Python Programming Internship  
+**🆔 Intern ID:** OIB/N1/IP380  
+**👨‍💻 Intern:** Babin Bid  
+**📅 Duration:** 1 Month (November 2025 to December 2025)  
+**📊 Status:** ✅ Active  
 
 This internship provided hands-on experience in **Python development**, focusing on practical project creation, problem-solving, and real-world applications.  
 The program emphasized **coding proficiency**, **open-source collaboration**, and **project-based learning**.
@@ -32,8 +32,8 @@ The program emphasized **coding proficiency**, **open-source collaboration**, an
 
 ## 📊 Internship Progress Tracker
 
-| Project Title | Status | Description |
-|----------------|:--------:|-------------|
+| 📘 Project Title | 🏗️ Status | 🧾 Description |
+|------------------|:----------:|----------------|
 | 🗣️ Voice Assistant | ⚙️ In Progress | A Python-based voice assistant capable of responding to user voice commands, telling time/date, and performing simple tasks. |
 | ⚖️ BMI Calculator | ✅ Completed | A GUI-based BMI calculator that takes height and weight inputs, calculates BMI, and classifies health categories. |
 | 🔐 Random Password Generator | ✅ Completed | A Python tool to generate strong, random passwords with customization options. |
@@ -44,26 +44,32 @@ The program emphasized **coding proficiency**, **open-source collaboration**, an
 
 ## 💻 Tech Stack Used
 
-| Category | Technologies |
-|-----------|---------------|
-| Language | Python 3 |
-| Libraries | `tkinter`, `pyttsx3`, `speech_recognition`, `random`, `datetime`, `requests` |
-| Tools | VS Code, GitHub |
-| Platform | Windows 11 |
-| APIs (where applicable) | OpenWeatherMap, Wikipedia, Google Search API |
+| ⚙️ Category | 🧠 Technologies |
+|--------------|----------------|
+| 🐍 Language | Python 3 |
+| 📚 Libraries | `tkinter`, `pyttsx3`, `speech_recognition`, `random`, `datetime`, `requests`, `socket`, `threading` |
+| 🧰 Tools | VS Code, GitHub |
+| 💻 Platform | Windows 11 |
+| 🌐 APIs (where applicable) | OpenWeatherMap, Wikipedia, Google Search API |
 
 ---
 
 ## 🗣️ Project 1 — Voice Assistant (⚙️ In Progress)
 
 A simple Python-based **Voice Assistant** that can:
-- Respond to basic greetings like “Hello”.
-- Tell the current time and date.
-- Search the web or Wikipedia.
-- Speak responses using `pyttsx3` and `speech_recognition`.
+- 🗣️ Respond to basic greetings like “Hello”.
+- ⏰ Tell the current time and date.
+- 🌐 Search the web or Wikipedia.
+- 🔊 Speak responses using `pyttsx3` and `speech_recognition`.
 
-**Concepts Covered:** NLP basics, automation, speech-to-text, text-to-speech.  
-**Future Goals:** Integrate with APIs (weather, email, news) and add task automation.
+### 💡 Concepts Covered:
+- NLP basics  
+- Automation  
+- Speech-to-text  
+- Text-to-speech  
+
+### 🚀 Future Goals:
+Integrate APIs for weather, emails, news, and task automation.
 
 ---
 
@@ -71,16 +77,20 @@ A simple Python-based **Voice Assistant** that can:
 
 A **Graphical BMI Calculator** built in Python using **Tkinter**.
 
-**Features:**
-- Takes user inputs for weight (kg) and height (m).
-- Calculates BMI and classifies it into categories:
-  - Underweight
-  - Normal
-  - Overweight
-  - Obese
-- Displays result in a clean GUI window.
+### 🧠 Features:
+- ✍️ Takes user inputs for **weight (kg)** and **height (m)**.  
+- ⚖️ Calculates BMI and classifies into:
+  - Underweight  
+  - Normal  
+  - Overweight  
+  - Obese  
+- 🪟 Displays results in a clean GUI window.
 
-**Concepts Covered:** GUI design, input validation, BMI logic, event handling.
+### 💡 Concepts Covered:
+- GUI design  
+- Input validation  
+- BMI logic  
+- Event handling  
 
 ---
 
@@ -88,23 +98,23 @@ A **Graphical BMI Calculator** built in Python using **Tkinter**.
 
 A comprehensive **Random Password Generator** with both CLI and GUI versions built in Python.
 
-**Features:**
-- **CLI Version**: Command-line tool with customizable password generation
-- **GUI Version**: Modern Tkinter interface with advanced features
-- **Security Rules**: Enforced strong password criteria
-- **Clipboard Integration**: One-click copying to clipboard
-- **Character Customization**: Exclude specific characters, choose character types
-- **Password Strength**: Real-time validation and scoring
-- **Batch Generation**: Generate multiple passwords at once
+### 🧠 Features:
+- 💻 **CLI Version**: Command-line tool with customizable password generation  
+- 🪟 **GUI Version**: Modern Tkinter interface with advanced features  
+- 🔒 **Security Rules**: Enforced strong password criteria  
+- 📋 **Clipboard Integration**: One-click copying to clipboard  
+- 🧩 **Character Customization**: Exclude characters, choose character types  
+- ⚙️ **Password Strength**: Real-time validation and scoring  
+- 🧮 **Batch Generation**: Generate multiple passwords at once  
 
-**Key Concepts Covered:**
-- Randomization algorithms
-- User input validation
-- Character set management
-- GUI design with Tkinter
-- Security best practices
-- Clipboard operations
-- Password strength analysis
+### 💡 Key Concepts Covered:
+- Randomization algorithms  
+- Input validation  
+- Character set management  
+- GUI design with Tkinter  
+- Security best practices  
+- Clipboard operations  
+- Password strength analysis  
 
 **Concepts Covered:** Randomization, input validation, character handling, GUI design, security rules, clipboard integration, customization.
 
