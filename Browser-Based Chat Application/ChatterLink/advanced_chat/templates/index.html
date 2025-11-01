@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatterLink - Advanced Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div id="login">
+        <h2>Join Chat</h2>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="text" id="room" placeholder="Room" required>
+        <button onclick="joinRoom()">Join</button>
+    </div>
+
+    <div id="chat" style="display:none;">
+        <h2>ChatterLink</h2>
+        <div id="messages"></div>
+        <input type="text" id="message" placeholder="Type a message..."
+            onkeypress="if(event.key=='Enter') sendMessage()">
+        <button onclick="sendMessage()">Send</button>
+        <input type="file" id="fileInput" accept="image/*">
+        <button onclick="uploadFile()">Upload Image</button>
+        <button onclick="leaveRoom()">Leave Room</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
