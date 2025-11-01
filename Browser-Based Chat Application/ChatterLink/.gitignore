@@ -1,0 +1,16 @@
+# ChatterLink project ignores
+# Ignore local environment files
+.env
+
+# Python artifacts
+__pycache__/
+*.pyc
+
+# Flask instance folder (may contain local DB)
+instance/
+
+# User uploads (do not commit uploaded media)
+static/uploads/
+
+# VS Code workspace settings
+.vscode/
