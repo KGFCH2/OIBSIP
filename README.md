@@ -37,8 +37,8 @@ The program emphasized **coding proficiency**, **open-source collaboration**, an
 | 🗣️ Voice Assistant | ⚙️ In Progress | A Python-based voice assistant capable of responding to user voice commands, telling time/date, and performing simple tasks. |
 | ⚖️ BMI Calculator | ✅ Completed | A GUI-based BMI calculator that takes height and weight inputs, calculates BMI, and classifies health categories. |
 | 🔐 Random Password Generator | ✅ Completed | A Python tool to generate strong, random passwords with customization options. |
-| 🌦️ Weather App | ⏳ Pending | A Python GUI app using APIs to display live weather updates for any location. |
-| 💬 Chat Application | ⏳ Pending | A real-time chat app using Python sockets, enabling message exchange between users. |
+| 🌦️ Weather App | ✅ Completed | A Python GUI app using APIs to display live weather updates for any location. |
+| 💬 Chat Application | ✅ Completed | A real-time chat app using Python sockets, enabling message exchange between users. |
 
 ---
 
