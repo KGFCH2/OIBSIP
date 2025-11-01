@@ -106,23 +106,43 @@ A comprehensive **Random Password Generator** with both CLI and GUI versions bui
 - Clipboard operations
 - Password strength analysis
 
-**Usage:**
-```bash
-# CLI Version
-python password_generator_cli.py -l 16 -v
-
-# GUI Version
-python password_generator_gui.py
-```
-
 **Concepts Covered:** Randomization, input validation, character handling, GUI design, security rules, clipboard integration, customization.
 
 ---
 
-## 🧩 Upcoming Projects
+## 🌦️ Project 4 — Weather App (✅ Completed)
 
-- 🌦️ **Weather App** — Real-time weather updates using OpenWeatherMap API.  
-- 💬 **Chat Application** — Socket-based real-time chat app.
+A **Python GUI Weather App** that fetches **live weather updates** for any city using the **OpenWeatherMap API**.
+
+### 🧠 Features:
+- 🖥️ User-friendly **Tkinter interface**
+- 🌍 Displays **city, temperature, humidity, and conditions**
+- ⚡ Fetches **real-time data** using `requests` and API integration
+- ❌ Includes **error handling** for invalid city inputs
+
+### 💡 Concepts Covered:
+- API requests  
+- JSON parsing  
+- GUI integration  
+- Error handling  
+
+---
+
+## 💬 Project 5 — Chat Application (✅ Completed)
+
+A **real-time chat application** built using Python **socket programming** and **multithreading**.
+
+### 🧠 Features:
+- 💬 Real-time **message exchange** between multiple users  
+- 🌐 **Client-server** architecture  
+- 💻 Simple **command-line interface** for chatting  
+- ⚙️ Supports **simultaneous conversations**
+
+### 💡 Concepts Covered:
+- Socket programming  
+- Networking  
+- Threading  
+- Client-server architecture  
 
 ---
 
