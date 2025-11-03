@@ -1,8 +1,8 @@
 # SkyCast AI - Intelligent Real-Time Weather Forecasting App
 
-**Note:** For deployment compatibility, the deployable version is now in the `skycast_ai` folder in the repository root.
+**Note:** For deployment compatibility, the deployable version is now in the `SkyCast_ai` folder in the repository root.
 
-Please use `skycast_ai/app.py` as the main file for Streamlit Cloud deployment.
+Please use `SkyCast_ai/app.py` as the main file for Streamlit Cloud deployment.
 
 SkyCast AI is a personalized atmospheric dashboard that fetches real-time weather data, forecasts, and visual insights using APIs. It evolves into an intelligent assistant that predicts patterns, gives advice, and alerts users to extreme weather.
 
