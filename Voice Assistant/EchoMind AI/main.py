@@ -11,7 +11,18 @@ import time
 from dotenv import load_dotenv
 import pytz
 import gemini_client
-from realtime_poc.poc import LocalTTS
+from urllib.parse import quote_plus
+import threading
+from ctypes import POINTER, cast
+try:
+    # pycaw is optional; we'll use it when available for native Windows volume control
+    from comtypes import CLSCTX_ALL
+    from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+    _PYCAW_AVAILABLE = True
+except Exception:
+    _PYCAW_AVAILABLE = False
+import shutil
+import shutil
 
 # Load environment variables
 load_dotenv()
@@ -76,27 +87,36 @@ def log_interaction(user: str, response: str, source: str = "local"):
 def speak(text):
     """Cross-platform text-to-speech"""
     print(f"Speaking: {text}")  # Debug print
-    try:
-        if OS == "windows":
-            # Use PowerShell with SAPI for Windows TTS
-            subprocess.run(["powershell", "-c", f'(New-Object -ComObject SAPI.SpVoice).Speak("{text}")'], capture_output=True)
-        elif OS == "darwin":  # macOS
-            # macOS TTS using say command
-            subprocess.run(["say", text], capture_output=True)
-        elif OS == "linux":
-            # Linux TTS using espeak (fallback to festival if available)
-            try:
-                subprocess.run(["espeak", text], capture_output=True)
-            except FileNotFoundError:
+
+    def _run_tts(t):
+        try:
+            if OS == "windows":
+                # Use PowerShell with SAPI for Windows TTS
+                subprocess.run(["powershell", "-c", f'(New-Object -ComObject SAPI.SpVoice).Speak("{t}")'], capture_output=True)
+            elif OS == "darwin":  # macOS
+                # macOS TTS using say command
+                subprocess.run(["say", t], capture_output=True)
+            elif OS == "linux":
+                # Linux TTS using espeak (fallback to festival if available)
                 try:
-                    subprocess.run(["festival", "--tts"], input=text.encode(), capture_output=True)
+                    subprocess.run(["espeak", t], capture_output=True)
                 except FileNotFoundError:
-                    print(f"TTS not available on this Linux system. Text: {text}")
-        else:
-            print(f"TTS not supported on {OS}. Text: {text}")
+                    try:
+                        subprocess.run(["festival", "--tts"], input=t.encode(), capture_output=True)
+                    except FileNotFoundError:
+                        print(f"TTS not available on this Linux system. Text: {t}")
+            else:
+                print(f"TTS not supported on {OS}. Text: {t}")
+        except Exception as e:
+            print(f"Error in speaking: {e}")
+            print(f"Text was: {t}")  # Fallback to show text
+
+    # Run TTS in background thread so it doesn't block the main loop
+    try:
+        t = threading.Thread(target=_run_tts, args=(text,), daemon=True)
+        t.start()
     except Exception as e:
-        print(f"Error in speaking: {e}")
-        print(f"Text was: {text}")  # Fallback to show text
+        print("Failed to start TTS thread:", e)
 
 def listen():
     """Function to listen to user's voice command"""
@@ -164,6 +184,67 @@ def search_web(query):
     speak(f"Searching for {query} on Google")
     log_interaction(query, f"Search opened: {query}", source="local")
 
+
+def direct_search(query=None):
+    """Open a Google search for the query and try to fetch a short summary.
+
+    This helper safely opens the user's default browser to Google and then
+    attempts to fetch a brief summary using DuckDuckGo Instant Answer API
+    (no API key required). The DuckDuckGo result is used only as a lightweight
+    spoken summary when available.
+    """
+    # If no query provided, ask the user
+    if not query:
+        speak("What would you like me to search for on Google?")
+        query = listen()
+        if not query:
+            speak("No search query provided.")
+            return
+
+    safe_q = query.strip()
+    url = f"https://www.google.com/search?q={quote_plus(safe_q)}"
+    try:
+        webbrowser.open(url)
+        speak(f"Opening Google search for {safe_q}")
+        # Try DuckDuckGo instant answer for a short summary
+        try:
+            ddg_url = (
+                "https://api.duckduckgo.com/?format=json&no_html=1&no_redirect=1&q="
+                + quote_plus(safe_q)
+            )
+            r = requests.get(ddg_url, timeout=5)
+            if r.status_code == 200:
+                body = r.json()
+                abstract = body.get("AbstractText") or body.get("Answer") or ""
+                if abstract:
+                    # Keep it short
+                    short = abstract.strip()
+                    if len(short) > 400:
+                        short = short[:400].rsplit(".", 1)[0] + "."
+                    speak(short)
+                    log_interaction(query, short, source="ddg")
+                    return
+                # Fallback to RelatedTopics snippet
+                topics = body.get("RelatedTopics") or []
+                if topics:
+                    # Try to find first text
+                    for t in topics:
+                        if isinstance(t, dict):
+                            text = t.get("Text") or t.get("Result") or None
+                            if text:
+                                speak(text)
+                                log_interaction(query, text, source="ddg_related")
+                                return
+        except Exception:
+            # If DuckDuckGo fails, don't block — we've already opened the browser
+            pass
+
+        # If no summary found, at least log the search
+        log_interaction(query, f"Search opened: {safe_q}", source="local")
+    except Exception as e:
+        speak("Sorry, I couldn't open the browser for that search.")
+        log_interaction(query, f"Search error: {e}", source="local")
+
 def get_weather(city):
     """Get weather information for a city"""
     try:
@@ -178,6 +259,49 @@ def get_weather(city):
             return "Sorry, I couldn't find weather information for that city."
     except Exception as e:
         return "Sorry, there was an error fetching the weather."
+
+
+def _pycaw_set_master_volume_percent(pct: float) -> bool:
+    """Set master volume to pct (0-100) using pycaw. Returns True on success."""
+    if not _PYCAW_AVAILABLE:
+        return False
+    try:
+        sessions = AudioUtilities.GetSpeakers()
+        interface = sessions.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+        scalar = max(0.0, min(1.0, pct / 100.0))
+        volume.SetMasterVolumeLevelScalar(scalar, None)
+        return True
+    except Exception:
+        return False
+
+
+def _pycaw_change_master_volume_by_percent(delta_pct: float) -> bool:
+    if not _PYCAW_AVAILABLE:
+        return False
+    try:
+        sessions = AudioUtilities.GetSpeakers()
+        interface = sessions.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+        cur = volume.GetMasterVolumeLevelScalar()
+        new = max(0.0, min(1.0, cur + delta_pct / 100.0))
+        volume.SetMasterVolumeLevelScalar(new, None)
+        return True
+    except Exception:
+        return False
+
+
+def _pycaw_get_master_volume_percent() -> float | None:
+    if not _PYCAW_AVAILABLE:
+        return None
+    try:
+        sessions = AudioUtilities.GetSpeakers()
+        interface = sessions.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+        cur = volume.GetMasterVolumeLevelScalar()
+        return float(cur * 100.0)
+    except Exception:
+        return None
 
 def get_greeting():
     """Get time-based greeting in IST"""
@@ -289,37 +413,73 @@ def main():
             log_interaction(command, "I am EchoMind AI, your voice assistant.", source="local")
 
         # Volume control (basic, best-effort)
-        elif any(word in command for word in ["volume", "sound", "mute", "unmute", "increase", "decrease"]):
-            # Try to parse a percentage
+        elif any(word in command for word in ["volume", "sound", "mute", "unmute", "increase", "decrease", "up", "down", "set volume", "set volume to", "set volume up", "set volume down"]):
+            # Parse intents: absolute set (to X%), relative change (by X%) or simple up/down
+            # Examples supported: "set volume to 60", "increase volume by 20", "decrease volume 10", "volume up"
+            # Find numeric percentage if present
             m = re.search(r"(\d{1,3})\s*%?", command)
+            perc = None
             if m:
-                perc = int(m.group(1))
-                perc = max(0, min(100, perc))
-                # Best-effort: try nircmd if installed (common Windows utility)
-                success = False
-                if OS == "windows":
-                    try:
-                        # nircmd expects 0-65535
-                        raw = int(perc / 100.0 * 65535)
-                        subprocess.run(["nircmd", "setsysvolume", str(raw)], check=False)
-                        success = True
-                    except Exception:
-                        success = False
-                if success:
-                    speak(f"Set volume to {perc} percent")
-                    log_interaction(command, f"Set volume to {perc}%", source="local")
+                try:
+                    perc = int(m.group(1))
+                    perc = max(0, min(100, perc))
+                except Exception:
+                    perc = None
+
+            # Detect increase vs decrease vs set
+            is_increase = any(tok in command for tok in ("increase", "up")) and "by" in command
+            is_decrease = any(tok in command for tok in ("decrease", "down")) and "by" in command
+            is_set = any(phrase in command for phrase in ("set volume to", "set volume")) or (perc is not None and ("to" in command or "set" in command))
+
+            # Helper to speak and log result
+            def _ack(msg):
+                speak(msg)
+                log_interaction(command, msg, source="local")
+
+            # Try nircmd on Windows if available
+            nircmd = None
+            if OS == "windows":
+                nircmd = shutil.which("nircmd") or shutil.which("nircmd.exe")
+
+            try:
+                if nircmd and OS == "windows":
+                    # nircmd uses 0-65535 volume scale
+                    scale = 65535
+                    if is_set and perc is not None:
+                        raw = int(perc / 100.0 * scale)
+                        subprocess.run([nircmd, "setsysvolume", str(raw)], check=False)
+                        _ack(f"Set volume to {perc} percent")
+                    elif (is_increase or ("increase" in command and "by" in command)) and perc is not None:
+                        delta = int(perc / 100.0 * scale)
+                        subprocess.run([nircmd, "changesysvolume", str(delta)], check=False)
+                        _ack(f"Increased volume by {perc} percent")
+                    elif (is_decrease or ("decrease" in command and "by" in command)) and perc is not None:
+                        delta = int(perc / 100.0 * scale)
+                        # changesysvolume accepts negative values to decrease
+                        subprocess.run([nircmd, "changesysvolume", str(-delta)], check=False)
+                        _ack(f"Decreased volume by {perc} percent")
+                    else:
+                        # No numeric provided: default +/- 10%
+                        default_delta = int(0.1 * scale)
+                        if any(tok in command for tok in ("increase", "up")):
+                            subprocess.run([nircmd, "changesysvolume", str(default_delta)], check=False)
+                            _ack("Increased volume")
+                        elif any(tok in command for tok in ("decrease", "down")):
+                            subprocess.run([nircmd, "changesysvolume", str(-default_delta)], check=False)
+                            _ack("Decreased volume")
+                        else:
+                            _ack("I can set the volume if you tell me a percentage, for example 'set volume to 60' or 'increase volume by 10'.")
                 else:
-                    speak("Volume control not available on this system. Please install nircmd or manage volume manually.")
-                    log_interaction(command, "Volume change requested but not executed", source="local")
-            else:
-                # generic volume command
-                if "increase" in command or "up" in command:
-                    speak("Increasing the volume")
-                elif "decrease" in command or "down" in command:
-                    speak("Decreasing the volume")
-                else:
-                    speak("I can change volume if you tell me a percentage, for example 'set volume to 60'.")
-                log_interaction(command, "Volume command (no percent)", source="local")
+                    # nircmd not available: instruct user how to enable or provide fallback
+                    if perc is not None and is_set:
+                        _ack(f"I can't change system volume from here. Please install nircmd (https://www.nirsoft.net/utils/nircmd.html) to enable setting the volume to {perc} percent automatically.")
+                    elif perc is not None and (is_increase or is_decrease):
+                        _ack(f"I can't change system volume from here. Please install nircmd to enable changing volume by {perc} percent automatically.")
+                    else:
+                        _ack("Volume control not available on this system. To enable programmatic volume control on Windows, install nircmd and add it to your PATH.")
+            except Exception as e:
+                print("Volume change error:", e)
+                speak("Sorry, I couldn't change the volume right now.")
         
         # Exit commands
         elif any(word in command for word in ["exit", "quit", "stop", "bye", "goodbye"]):
@@ -333,20 +493,16 @@ def main():
                 # If streaming is enabled, speak chunks as they arrive using queued TTS
                 stream_flag = os.getenv("GEMINI_API_STREAM", "").lower() in ("1", "true", "yes")
                 if stream_flag:
-                    tts = LocalTTS()
+                    # Best-effort streaming: speak chunks as they arrive.
                     try:
                         for chunk in gemini_client.stream_generate(command):
                             if chunk:
                                 print("[stream chunk]", chunk)
-                                tts.speak_async(chunk)
-                        # Wait for queued speech to finish
-                        try:
-                            tts.queue.join()
-                        except Exception:
-                            pass
-                    finally:
-                        tts.shutdown()
-                    log_interaction(command, "(streamed response)", source="gemini_stream")
+                                speak(chunk)
+                        log_interaction(command, "(streamed response)", source="gemini_stream")
+                    except Exception as e:
+                        print("Streaming error:", e)
+                        speak("Sorry, there was an error with streaming response.")
                 else:
                     # Blocking helper
                     response = gemini_client.generate_response(command)

@@ -1,64 +1,120 @@
-# SkyCast AI - Intelligent Real-Time Weather Forecasting App
+# SkyCast AI — Intelligent Real-Time Weather Dashboard
 
-**Note:** For deployment compatibility, the deployable version is now in the `skycast_ai` folder in the repository root.
+This repository provides the SkyCast AI weather dashboard. The deployable app lives in the `SkyCast_AI` folder at the repository root. Use `SkyCast_AI/app.py` as the entry point for Streamlit deployments.
 
-Please use `skycast_ai/app.py` as the main file for Streamlit Cloud deployment.
+SkyCast AI fetches real-time weather and forecast data, visualizes trends, and can be extended with AI-driven insights and alerts.
 
-SkyCast AI is a personalized atmospheric dashboard that fetches real-time weather data, forecasts, and visual insights using APIs. It evolves into an intelligent assistant that predicts patterns, gives advice, and alerts users to extreme weather.
+## Key features
 
-## Features
+- Real-time current weather (temperature, humidity, pressure, wind, conditions)
+- Hourly / multi-day forecast with interactive charts
+- Auto-location detection (IP-based) and manual city input
+- Unit toggle (Celsius / Fahrenheit)
+- Plotly visualizations and OpenWeatherMap icons
 
-- **Real-time Weather Data**: Current temperature, humidity, pressure, wind speed, and conditions.
-- **5-Day Forecast**: Hourly forecasts with temperature trends and weather icons.
-- **Auto Location Detection**: Detects user's city using IP address.
-- **Unit Conversion**: Toggle between Celsius and Fahrenheit.
-- **Interactive Visualizations**: Temperature forecast charts using Plotly.
-- **Weather Icons**: Dynamic icons from OpenWeatherMap.
+## Supported providers
 
-## Tech Stack
+- OpenWeatherMap (default): current + 5-day/3-hour forecast endpoints are used when this provider is selected.
+- WeatherAPI.com: supported as an alternative provider; the app normalizes WeatherAPI responses so the UI can reuse the same display logic (current + sampled forecast entries).
 
-- **Python**
-- **Streamlit** for GUI
-- **Requests** for API calls
-- **Plotly** for data visualization
-- **Geopy** for geolocation (optional)
-- **OpenWeatherMap API** for weather data
+Note: When using WeatherAPI the app samples hourly data (every ~3 hours) to approximate OpenWeatherMap's 3-hour forecast granularity.
 
-## Setup Instructions
+## Tech stack
 
-1. **Clone or Download** the project files.
+- Python 3.8+
+- Streamlit (UI)
+- requests (HTTP)
+- plotly (charts)
+- Optional: geopy for enhanced geolocation
+- OpenWeatherMap API for weather data
 
-2. **Install Dependencies**:
+Other runtime notes:
+- The app uses ipinfo.io (via a simple GET request) to auto-detect city from the user's IP when "Auto-detect from IP" is chosen.
+- The repository's `app.py` currently imports `geopy.geocoders.Nominatim` but geopy is optional; the IP detect path doesn't require geopy.
+
+## Quick setup
+
+1. Clone or download the repository.
+
+2. Create and activate a virtual environment (recommended):
+
+   Windows (cmd.exe):
+   ```cmd
+   python -m venv .venv
+   .venv\Scripts\activate
    ```
+
+3. Install dependencies:
+
+   ```cmd
    pip install -r requirements.txt
    ```
 
-3. **Get API Key**:
-   - Sign up at [OpenWeatherMap](https://openweathermap.org/api) and get a free API key.
+4. Set your OpenWeatherMap API key. You can set an environment variable or enter it in the app when prompted.
 
-4. **Run the App**:
+   Windows (cmd.exe):
+   ```cmd
+   setx OPENWEATHER_API_KEY "your_api_key_here"
    ```
+
+   If you plan to use WeatherAPI.com as the provider, set:
+
+   ```cmd
+   setx WEATHERAPI_KEY "your_weatherapi_key_here"
+   ```
+
+   Note: After running setx you may need to open a new terminal or restart your editor to see the variable.
+
+
+5. Run the Streamlit app (use the app in `SkyCast_AI`):
+
+   ```cmd
+   cd SkyCast_AI
    streamlit run app.py
    ```
-   Or if streamlit is not in PATH:
-   ```
+
+   Or, if streamlit is not on PATH:
+
+   ```cmd
    python -m streamlit run app.py
    ```
 
-5. **Enter your API Key** in the app and select your location method.
+## Where to find the deployable app
 
-## Usage
+The deployable Streamlit app is located at:
 
-- Choose to enter a city manually or auto-detect via IP.
-- View current weather conditions and 5-day forecast.
-- Switch between temperature units.
+ - `SkyCast_AI/app.py` — main app for deployment and local run
 
-## Future Enhancements
+If you see an older `app.py` at the repository root, prefer the one in `SkyCast_AI` for current deployment compatibility.
 
-- AI-powered weather insights and predictions.
-- Voice input and smart alerts.
-- Interactive maps and mobile app version.
+## Configuration & usage notes
+
+- API key: The app uses the OpenWeatherMap API. Provide a valid API key through the UI or via the `OPENWEATHER_API_KEY` environment variable.
+- If you select WeatherAPI.com as the provider, provide a WeatherAPI key via the UI or the `WEATHERAPI_KEY` environment variable.
+- Location: Choose between manual city input or auto-detection (IP). Auto-detection can be less accurate depending on your network or VPN.
+- Units: Switch between Celsius and Fahrenheit inside the UI.
+
+Provider-specific details & normalization
+- OpenWeatherMap: icon codes are used to fetch images from OpenWeatherMap's icon endpoint.
+- WeatherAPI.com: the app converts WeatherAPI responses into an OpenWeatherMap-like shape so the same UI code can display temperature, humidity, description and icons; sunrise/sunset are retrieved from WeatherAPI's forecast endpoint when available.
+
+## Development & testing
+
+- Add small tests and type hints when extending functionality.
+- When changing requirements, update `requirements.txt` and verify the app runs locally.
+
+## Contributing
+
+Contributions, bug reports and feature requests are welcome. Open an issue or submit a pull request with focused changes and a short description.
 
 ## License
 
-This project is for educational purposes. Ensure compliance with API terms of service.
+This project is provided for educational purposes. Check third-party API terms (OpenWeatherMap) before redistributing.
+
+## Contact / Next steps
+
+- To deploy to Streamlit Cloud, point the service at `SkyCast_AI/app.py` and set the `OPENWEATHER_API_KEY` in the deployment secrets.
+- If using WeatherAPI in deployment, add `WEATHERAPI_KEY` to the project's secrets and choose the provider in the UI.
+- If you'd like, I can also:
+  - Add a minimal `.env` example and update `requirements.txt` if dependencies changed,
+  - Create a short CONTRIBUTING.md and LICENSE file.

@@ -1,10 +1,46 @@
-{"ts": 1762081758.2059114, "user": "how are you baby", "response": "I'm doing well, thank you! How can I assist you?", "source": "local"}
-{"ts": 1762081779.8016636, "user": "open google chrome", "response": "Opening google chrome", "source": "local"}
-{"ts": 1762081792.8549194, "user": "open youtube from browser", "response": "Opening youtube from browser", "source": "local"}
-{"ts": 1762081821.3224986, "user": "open excel", "response": "Opening excel", "source": "local"}
-{"ts": 1762081835.0970585, "user": "open all microsoft apps", "response": "Opening all microsoft apps", "source": "local"}
-{"ts": 1762150119.888427, "user": "what is the weather", "response": "The weather in kolkata is haze with a temperature of 29.97 degrees Celsius.", "source": "local"}
-{"ts": 1762150140.6346834, "user": "open camera", "response": "Opening camera", "source": "local"}
-{"ts": 1762150155.3573024, "user": "open microsoft word", "response": "Opening microsoft word", "source": "local"}
-{"ts": 1762150175.0225708, "user": "open youtube on google open youtube on google", "response": "Opening youtube on google open youtube on google", "source": "local"}
-{"ts": 1762150224.807587, "user": "open chrome", "response": "Opening chrome", "source": "local"}
+{"ts": 1762166323.4369054, "user": "what is today", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762166373.5361626, "user": "weather of kolkata", "response": "The weather in kolkata is haze with a temperature of 29.97 degrees Celsius.", "source": "local"}
+{"ts": 1762166388.949025, "user": "how", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762166607.6393366, "user": "how are you today", "response": "I'm doing well, thank you! How can I assist you?", "source": "local"}
+{"ts": 1762166624.5406995, "user": "who is it", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762166641.1996007, "user": "do you know bhavin beat", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762166656.5558572, "user": "are you dumb", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762166736.919719, "user": "weather", "response": "The weather in london is broken clouds with a temperature of 15.33 degrees Celsius.", "source": "local"}
+{"ts": 1762166783.8686216, "user": "give me the weather of", "response": "Sorry, I couldn't find weather information for that city.", "source": "local"}
+{"ts": 1762166825.8442578, "user": "i want the weather of kolkata", "response": "The weather in kolkata is haze with a temperature of 29.97 degrees Celsius.", "source": "local"}
+{"ts": 1762166853.843412, "user": "are you gem", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762166871.2042449, "user": "are you gem", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762166921.6608171, "user": "current location", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762166944.781023, "user": "what is the weather today", "response": "The weather in jaipur is haze with a temperature of 30.62 degrees Celsius.", "source": "local"}
+{"ts": 1762166984.0572972, "user": "what is the weather of today", "response": "The weather in sydney is overcast clouds with a temperature of 20.98 degrees Celsius.", "source": "local"}
+{"ts": 1762167007.7084184, "user": "what is the weather of today", "response": "The weather in antarctica is clear sky with a temperature of -31.23 degrees Celsius.", "source": "local"}
+{"ts": 1762167026.7350698, "user": "what is the humidity of antarctica", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762167112.854979, "user": "open ms word", "response": "Opening ms word", "source": "local"}
+{"ts": 1762167122.8481894, "user": "open camera", "response": "Opening camera", "source": "local"}
+{"ts": 1762167136.0430303, "user": "open ms powerpoint", "response": "Opening ms powerpoint", "source": "local"}
+{"ts": 1762167148.3337033, "user": "open excel", "response": "Opening excel", "source": "local"}
+{"ts": 1762167178.3625433, "user": "open canva", "response": "Opening canva", "source": "local"}
+{"ts": 1762167190.911721, "user": "open notepad", "response": "Opening notepad", "source": "local"}
+{"ts": 1762167201.8650136, "user": "open chrome", "response": "Opening chrome", "source": "local"}
+{"ts": 1762167216.3146636, "user": "open outlook", "response": "Opening outlook", "source": "local"}
+{"ts": 1762167249.6569762, "user": "open cmd", "response": "Opening cmd", "source": "local"}
+{"ts": 1762167260.1220605, "user": "open control panel", "response": "Opening control panel", "source": "local"}
+{"ts": 1762167271.9268694, "user": "open recycle bin", "response": "Opening recycle bin", "source": "local"}
+{"ts": 1762167283.9083233, "user": "open vs code", "response": "Opening vs code", "source": "local"}
+{"ts": 1762167313.7109342, "user": "open microsoft ads", "response": "Opening microsoft ads", "source": "local"}
+{"ts": 1762167325.830965, "user": "open microsoft edge", "response": "Opening microsoft edge", "source": "local"}
+{"ts": 1762167342.518039, "user": "i am not", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762167355.248018, "user": "open file explorer", "response": "Opening file explorer", "source": "local"}
+{"ts": 1762167380.8885288, "user": "open fire", "response": "Opening fire", "source": "local"}
+{"ts": 1762167393.1051111, "user": "open firefox", "response": "Opening firefox", "source": "local"}
+{"ts": 1762167403.5018406, "user": "open chat gpt", "response": "Opening chat gpt", "source": "local"}
+{"ts": 1762167416.2031417, "user": "open open ai", "response": "Opening open ai", "source": "local"}
+{"ts": 1762167442.6805604, "user": "open jio cinema", "response": "Opening jio cinema", "source": "local"}
+{"ts": 1762169715.4599864, "user": "what can you do", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762169733.7652977, "user": "can you change the voice", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762169742.2215981, "user": "open camera", "response": "Opening camera", "source": "local"}
+{"ts": 1762169767.0777173, "user": "open ms", "response": "Opening ms", "source": "local"}
+{"ts": 1762169777.6000464, "user": "open powerpoint", "response": "Opening powerpoint", "source": "local"}
+{"ts": 1762169787.4402072, "user": "open excel", "response": "Opening excel", "source": "local"}
+{"ts": 1762169817.9923294, "user": "ms word", "response": "This is a simulated streaming response from Gemini. Replace this stub with your provider's streaming client to receive real tokens.", "source": "gemini"}
+{"ts": 1762169839.1668665, "user": "weather", "response": "Sorry, I couldn't find weather information for that city.", "source": "local"}
