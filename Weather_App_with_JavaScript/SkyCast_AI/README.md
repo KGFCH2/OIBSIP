@@ -109,7 +109,6 @@ Contributions, bug reports and feature requests are welcome. Open an issue or su
 
 ## License
 
-<<<<<<< HEAD
 This project is provided for educational purposes. Check third-party API terms (OpenWeatherMap) before redistributing.
 
 ## Contact / Next steps
@@ -119,6 +118,3 @@ This project is provided for educational purposes. Check third-party API terms (
 - If you'd like, I can also:
   - Add a minimal `.env` example and update `requirements.txt` if dependencies changed,
   - Create a short CONTRIBUTING.md and LICENSE file.
-=======
-This project is for educational purposes. Ensure compliance with API terms of service.
->>>>>>> fd04c780993ed245a4bbfe4908cbcae6d06ffb99
