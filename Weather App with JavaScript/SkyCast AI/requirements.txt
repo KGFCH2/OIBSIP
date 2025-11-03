@@ -1,6 +1,0 @@
-streamlit
-requests
-geopy
-matplotlib
-plotly
-python-dotenv

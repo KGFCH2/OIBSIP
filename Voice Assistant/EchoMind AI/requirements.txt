@@ -1,9 +1,5 @@
-SpeechRecognition
+speechrecognition
+requests
+python-dotenv
+pytz
 pyttsx3
-wikipedia
-PyAudio
-
-# Notes:
-# On Windows, installing PyAudio via pip can be problematic. If you see errors,
-# try: pip install pipwin
-# then: pipwin install pyaudio
