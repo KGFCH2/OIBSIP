@@ -13,7 +13,16 @@ def handle_simple_city_weather(command):
         
         # Single word city - check blacklist of common question/command words
         if len(words) == 1 and re.match(r"^[a-zA-Z]{3,40}$", command):
-            blacklist_tokens = ("why", "what", "when", "where", "how", "do", "did", "does", "don't", "didn't", "tell", "is", "are", "be", "open", "hello", "hi")
+            blacklist_tokens = (
+                "why", "what", "when", "where", "how", "do", "did", "does", 
+                "don't", "didn't", "tell", "is", "are", "be", "open", "hello", "hi",
+                "yes", "no", "ok", "okay", "sure", "thanks", "thank", "welcome",
+                "please", "sorry", "excuse", "bye", "goodbye", "quit", "exit",
+                "next", "stop", "continue", "repeat", "again", "help",
+                "search", "api", "map", "maps", "database", "website", "web",
+                "google", "chrome", "firefox", "edge", "browser",
+                "open", "visit", "go", "check", "find", "look", "show"
+            )
             if command.lower() not in blacklist_tokens:
                 simple_city_candidate = True
         

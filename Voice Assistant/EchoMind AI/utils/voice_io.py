@@ -27,6 +27,32 @@ def speak(text):
         print(f"Error in speaking: {e}")
         print(f"Text was: {clean_text}")
 
+
+def speak_stream(chunks, min_buffer: int = 200, pause_on_punctuation: bool = False):
+    """Assemble an iterable/generator of text chunks into complete text.
+
+    Behavior:
+    - Accumulates incoming chunks into a buffer
+    - Returns the complete assembled text
+    - Does NOT print or speak (caller is responsible for that)
+
+    This ensures clean single output without duplication.
+    """
+    buf = []
+
+    for c in chunks:
+        if not c:
+            continue
+        # ensure chunk is a string
+        part = str(c)
+        buf.append(part)
+
+    # Assemble final text
+    final_text = "".join(buf).strip()
+    
+    return final_text
+
+
 def listen():
     """Function to listen to user's voice command"""
     recognizer = sr.Recognizer()

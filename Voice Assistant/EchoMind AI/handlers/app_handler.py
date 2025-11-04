@@ -3,10 +3,95 @@ import re
 import subprocess
 import time
 import os
+import sys
+import winreg
 from config.settings import OS, COMMON_APPS
-from utils.voice_io import speak, listen
+from utils.voice_io import speak, listen, speak_stream
 from utils.text_processing import clean_connector_words
 from utils.logger import log_interaction
+
+
+def find_installed_apps_windows():
+    """Find all installed applications on Windows by scanning registry"""
+    apps = {}
+    registry_paths = [
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+        r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+    ]
+    
+    try:
+        for path in registry_paths:
+            try:
+                reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
+                i = 0
+                while True:
+                    try:
+                        subkey_name = winreg.EnumKey(reg_key, i)
+                        subkey = winreg.OpenKey(reg_key, subkey_name)
+                        
+                        try:
+                            app_name = winreg.QueryValueEx(subkey, "DisplayName")[0]
+                            app_path = None
+                            
+                            # Try to find executable path
+                            try:
+                                app_path = winreg.QueryValueEx(subkey, "InstallLocation")[0]
+                            except:
+                                pass
+                            
+                            # Clean up app name
+                            app_name_clean = app_name.lower().strip()
+                            if app_name_clean and len(app_name_clean) > 1:
+                                apps[app_name_clean] = {
+                                    'name': app_name,
+                                    'path': app_path
+                                }
+                        finally:
+                            winreg.CloseKey(subkey)
+                        i += 1
+                    except WindowsError:
+                        break
+                winreg.CloseKey(reg_key)
+            except:
+                pass
+    except Exception as e:
+        print(f"Error scanning registry: {e}")
+    
+    return apps
+
+
+def find_installed_apps_linux():
+    """Find installed applications on Linux"""
+    apps = {}
+    try:
+        # Search in standard locations
+        common_paths = [
+            '/usr/share/applications',
+            '/usr/local/share/applications',
+            os.path.expanduser('~/.local/share/applications')
+        ]
+        
+        for path in common_paths:
+            if os.path.exists(path):
+                for file in os.listdir(path):
+                    if file.endswith('.desktop'):
+                        app_name = file.replace('.desktop', '').lower()
+                        apps[app_name] = {'name': app_name, 'path': os.path.join(path, file)}
+    except Exception as e:
+        print(f"Error finding Linux apps: {e}")
+    
+    return apps
+
+
+def find_installed_apps():
+    """Find all installed apps based on OS"""
+    if OS == "windows":
+        return find_installed_apps_windows()
+    elif OS == "linux":
+        return find_installed_apps_linux()
+    else:
+        # macOS and others will use default approach
+        return {}
 
 def handle_app_opening(command):
     """Handle application opening commands"""
@@ -54,7 +139,7 @@ def handle_app_opening(command):
         if app_clean in ("google", "google chrome"):
             app_clean = "chrome"
         
-        # Check if it's a common app
+        # Check if it's a common app first
         if app_clean in COMMON_APPS:
             launch_cmd = COMMON_APPS[app_clean]
             try:
@@ -79,7 +164,41 @@ def handle_app_opening(command):
                 speak("Sorry, I couldn't open that app.")
                 return False
         else:
-            # Try to launch directly
+            # Try to find the app from installed apps
+            installed_apps = find_installed_apps()
+            
+            # Search for the app (exact match first, then partial match)
+            matched_app = None
+            if app_clean in installed_apps:
+                matched_app = app_clean
+            else:
+                # Partial match search
+                for app_key in installed_apps:
+                    if app_clean in app_key or app_key in app_clean:
+                        matched_app = app_key
+                        break
+            
+            if matched_app:
+                try:
+                    if OS == "windows":
+                        # Try to launch using the app name
+                        subprocess.run(["cmd", "/c", "start", matched_app], shell=True)
+                    elif OS == "darwin":
+                        subprocess.run(["open", "-a", matched_app], capture_output=True)
+                    elif OS == "linux":
+                        subprocess.run([matched_app], capture_output=True)
+                    
+                    speak(f"Opening {app}")
+                    log_interaction(command, f"Opening {app}", source="local")
+                    
+                    # If there's remaining text, process it
+                    if remaining_text and remaining_text.strip():
+                        _process_remaining_text(remaining_text)
+                    return True
+                except Exception as e:
+                    print(f"Error launching app: {e}")
+            
+            # If not found in registry, try direct launch
             try:
                 if OS == "windows":
                     subprocess.run(["cmd", "/c", "start", app_clean], shell=True)
@@ -102,8 +221,17 @@ def handle_app_opening(command):
     return False
 
 def _process_remaining_text(text):
-    """Helper function to process remaining text with Gemini"""
+    """Helper function to process remaining text with Gemini
+    
+    BUT: Don't process if text is just app control commands (close, shutdown, etc)
+    """
     import gemini_client
+    
+    # Check if remaining text is just an app control command
+    if re.search(r'\b(close|shut|kill|terminate|stop|shutdown)\b', text, re.IGNORECASE):
+        # This is a close/control command, don't process through Gemini
+        # It should be handled separately
+        return False
     
     time.sleep(1)  # Give the app time to launch
     speak(f"Now, {text}")
@@ -111,18 +239,39 @@ def _process_remaining_text(text):
     
     if stream_flag:
         try:
-            for chunk in gemini_client.stream_generate(text):
-                if chunk:
-                    print("[stream chunk]", chunk)
-                    speak(chunk)
-            log_interaction(text, "(streamed response)", source="gemini_stream")
+            gen = gemini_client.stream_generate(text)
+            final_text = speak_stream(gen)
+            
+            if not final_text:
+                return True
+            
+            cleaned = gemini_client.normalize_response(final_text)
+            final_clean = gemini_client.strip_json_noise(cleaned)
+            
+            if final_clean:
+                print(final_clean)
+                speak(final_clean)
+                log_interaction(text, final_clean, source="gemini_stream")
+                
         except Exception as e:
-            print("Streaming error:", e)
+            print(f"Streaming error: {e}")
             speak("Sorry, there was an error with the response.")
     else:
         response = gemini_client.generate_response(text)
         if response:
-            speak(response)
-            log_interaction(text, response, source="gemini")
+            cleaned = gemini_client.normalize_response(response)
+            final_clean = gemini_client.strip_json_noise(cleaned)
+            
+            if final_clean:
+                print(final_clean)
+                speak(final_clean)
+            else:
+                print(response)
+                speak(response)
+            log_interaction(text, final_clean if final_clean else response, source="gemini")
         else:
             speak("Sorry, I couldn't generate a response.")
+    
+    return True
+
+

@@ -3,6 +3,7 @@ EchoMind AI - Main entry point for the voice assistant
 This refactored version uses modular architecture for better maintainability
 """
 import os
+import time
 from dotenv import load_dotenv
 
 # Load environment variables BEFORE importing other modules
@@ -15,16 +16,19 @@ from handlers.time_handler import handle_time
 from handlers.date_handler import handle_date
 from handlers.simple_weather_handler import handle_simple_city_weather
 from handlers.weather_handler import handle_weather
-from handlers.web_handler import handle_browser_search, handle_website_opening
+from handlers.web_handler import handle_browser_search, handle_website_opening, handle_whatsapp_web
 from handlers.file_handler import handle_file_opening
+from handlers.file_writing_handler import handle_file_writing
 from handlers.app_handler import handle_app_opening
 from handlers.personal_handler import handle_personal_questions
+from handlers.text_input_handler import handle_text_input
 from handlers.volume_handler import handle_volume
 from handlers.close_app_handler import handle_app_closing
+from handlers.music_handler import handle_play_music, handle_play_on_youtube
 from handlers.exit_handler import handle_exit
 
 # Import utilities
-from utils.voice_io import speak, listen
+from utils.voice_io import speak, listen, speak_stream
 from utils.text_processing import convert_spoken_symbols, is_symbol_only
 from utils.time_utils import get_greeting
 from utils.logger import log_interaction
@@ -36,14 +40,19 @@ import gemini_client
 def route_command(command):
     """Route command to appropriate handler"""
     handlers = [
+        ("Text input", handle_text_input),
         ("Thank you", handle_thank_you),
         ("Greeting", handle_greeting),
         ("Time", handle_time),
         ("Date", handle_date),
-        ("Simple city weather", handle_simple_city_weather),
-        ("Weather", handle_weather),
         ("Browser search", handle_browser_search),
         ("Website opening", handle_website_opening),
+        ("Simple city weather", handle_simple_city_weather),
+        ("Weather", handle_weather),
+        ("WhatsApp", handle_whatsapp_web),
+        ("File writing", handle_file_writing),
+        ("Music (YouTube play)", handle_play_on_youtube),
+        ("Music (play)", handle_play_music),
         ("File opening", handle_file_opening),
         ("App opening", handle_app_opening),
         ("Personal questions", handle_personal_questions),
@@ -53,7 +62,14 @@ def route_command(command):
     ]
     
     for handler_name, handler in handlers:
-        if handler_name == "Exit":
+        if handler_name == "Text input":
+            # Special case for text input - can return "exit"
+            result = handle_text_input(command)
+            if result == "exit":
+                return "exit"
+            elif result:
+                return "handled"
+        elif handler_name == "Exit":
             # Special case for exit
             if handle_exit(command):
                 return "exit"
@@ -70,26 +86,64 @@ def handle_gemini_fallback(command):
         stream_flag = os.getenv("GEMINI_API_STREAM", "").lower() in ("1", "true", "yes")
         if stream_flag:
             try:
-                for chunk in gemini_client.stream_generate(command):
-                    if chunk:
-                        print("[stream chunk]", chunk)
-                        speak(chunk)
-                log_interaction(command, "(streamed response)", source="gemini_stream")
+                # Get streaming chunks
+                gen = gemini_client.stream_generate(command)
+                # Assemble complete response without printing
+                final_text = speak_stream(gen)
+                
+                if not final_text or not final_text.strip():
+                    print(f"DEBUG: Empty response from stream_generate for: {command}")
+                    # Try blocking call as fallback
+                    response = gemini_client.generate_response(command)
+                    if response and "trouble" not in response.lower():
+                        print(response)
+                        speak(response)
+                        log_interaction(command, response, source="gemini_fallback")
+                    else:
+                        speak("Sorry, I couldn't generate a response.")
+                        log_interaction(command, "No response returned", source="gemini_stream")
+                    return
+                
+                # Normalize and clean the complete response
+                cleaned = gemini_client.normalize_response(final_text)
+                final_clean = gemini_client.strip_json_noise(cleaned)
+                
+                # Use cleaned response if available, otherwise use final_text
+                response_to_use = final_clean if final_clean else final_text
+                if response_to_use and response_to_use.strip():
+                    # Print and speak ONCE
+                    print(response_to_use)
+                    speak(response_to_use)
+                    log_interaction(command, response_to_use, source="gemini_stream")
+                else:
+                    speak("Sorry, I couldn't generate a response.")
+                    log_interaction(command, "No response returned", source="gemini_stream")
+                
             except Exception as e:
-                print("Streaming error:", e)
+                print(f"Streaming error: {e}")
                 speak("Sorry, there was an error with streaming response.")
+                log_interaction(command, f"Streaming error: {e}", source="gemini_stream")
         else:
             response = gemini_client.generate_response(command)
             if response:
-                speak(response)
-                log_interaction(command, response, source="gemini")
+                cleaned = gemini_client.normalize_response(response)
+                final_clean = gemini_client.strip_json_noise(cleaned)
+                
+                if final_clean:
+                    print(final_clean)
+                    speak(final_clean)
+                    log_interaction(command, final_clean, source="gemini")
+                else:
+                    print(response)
+                    speak(response)
+                    log_interaction(command, response, source="gemini")
             else:
                 speak("Sorry, I couldn't generate a response.")
                 log_interaction(command, "No response returned", source="gemini")
     except Exception as e:
-        print(f"Gemini integration error: {e}")
+        print(f"Gemini error: {e}")
         speak("Sorry, I couldn't process that right now.")
-        log_interaction(command, f"Gemini error: {e}", source="gemini")
+        log_interaction(command, f"Error: {e}", source="gemini")
 
 
 def main():
@@ -119,10 +173,12 @@ def main():
             break
         elif result == "handled":
             # Handler already processed the command
+            time.sleep(0.5)  # Small delay to avoid rate limiting
             continue
         else:
             # No handler matched, try Gemini
             handle_gemini_fallback(command)
+            time.sleep(0.5)  # Small delay between API calls to avoid rate limiting
 
 
 if __name__ == "__main__":

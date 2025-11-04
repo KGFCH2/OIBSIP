@@ -92,6 +92,15 @@ This voice assistant is designed to work on multiple operating systems:
 - "Search for [query]", "Google [query]", "Find [query]" → 🔎 Web search
 - "Search Python tutorials on Google" → Opens search in browser
 
+**🎵 Music & YouTube:**
+- "Play [song name]" → 🎵 Search and open song on YouTube
+- "Play [song name] by [artist]" → Search specific artist's song
+- "Play music [song name]" → Alternative music command
+- **Examples:**
+  - "play imagine by john lennon"
+  - "play bohemian rhapsody"
+  - "play music stairway to heaven"
+
 **💻 App Launching:**
 - "Open [app name]", "Launch [app name]", "Start [app name]" → 🚀 Open applications
 - **Examples:** 
@@ -122,10 +131,11 @@ This voice assistant is designed to work on multiple operating systems:
 
 - 🎉 **Time-Based Greetings:** The assistant greets you with "Good morning", "Good afternoon", "Good evening", or "Good night" based on the current time in Indian Standard Time (IST)
 - 🌏 **IST Time & Date:** All time and date responses are provided in Indian Standard Time (Asia/Kolkata timezone)
-- 🎤 **Voice Commands:** Supports flexible voice commands for time, date, weather, web search, and more
+- 🎤 **Voice Commands:** Supports flexible voice commands for time, date, weather, web search, music, and more
 - 🔊 **Text-to-Speech:** Uses pyttsx3 for Windows, system commands for macOS/Linux
 - 🌤️ **Weather Integration:** Provides current weather information using OpenWeather API
 - 🔍 **Web Search:** Opens Google search results for user queries in your browser
+- 🎵 **Music Playback:** Search and play songs directly from YouTube with voice commands
 - 🚀 **App Launcher:** Can open any application installed on your device by name
 - 🧠 **AI Integration:** Uses Gemini API for intelligent responses to unknown commands
 - 📝 **Interaction Logging:** Automatically logs all interactions to `logs/assistant.jsonl`

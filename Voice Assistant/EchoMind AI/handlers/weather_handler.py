@@ -7,6 +7,11 @@ from utils.logger import log_interaction
 
 def handle_weather(command):
     """Handle weather commands with multi-pattern detection"""
+    
+    # Skip if this is a browser search command (has browser keyword + on/in separator)
+    if re.search(r'\b(on|in)\b.*\b(chrome|firefox|edge|google|browser)\b', command, re.IGNORECASE):
+        return False
+    
     # Check for weather-related keywords
     weather_match = re.search(r'\b(weather|forecast|temperature)\b.*\b(in|of|at|for|around)\s+(\w+)\b', command, re.IGNORECASE) or \
                    re.search(r'\b(\w+)\s+(weather|forecast|temperature|current weather)\b', command, re.IGNORECASE) or \
