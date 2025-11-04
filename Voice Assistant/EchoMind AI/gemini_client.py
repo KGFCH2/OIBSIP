@@ -137,14 +137,21 @@ def call_google_generate(prompt: str, timeout: float = 15.0) -> Optional[str]:
         resp.raise_for_status()
         data = resp.json()
         # Google response shapes can vary. Try common locations:
-        # 1) data['candidates'][0]['content'][0]['text']
+        # 1) data['candidates'][0]['content']['parts'][0]['text']
         if isinstance(data, dict):
             if "candidates" in data and isinstance(data["candidates"], list) and data["candidates"]:
                 cand = data["candidates"][0]
-                # candidate may have 'content' array
+                # candidate may have 'content' dict with 'parts' array
                 if isinstance(cand, dict):
-                    content = cand.get("content") or cand.get("output")
-                    if isinstance(content, list) and content:
+                    content = cand.get("content")
+                    if isinstance(content, dict):
+                        parts = content.get("parts")
+                        if isinstance(parts, list) and parts:
+                            first_part = parts[0]
+                            if isinstance(first_part, dict) and "text" in first_part:
+                                return first_part["text"]
+                    # also try if content is a list
+                    elif isinstance(content, list) and content:
                         first = content[0]
                         if isinstance(first, dict) and "text" in first:
                             return first["text"]
@@ -165,8 +172,15 @@ def call_google_generate(prompt: str, timeout: float = 15.0) -> Optional[str]:
                 if k in data and isinstance(data[k], str):
                     return data[k]
         return resp.text
-    except Exception:
-        raise
+    except requests.exceptions.Timeout:
+        print(f"WARNING: API timeout calling {GEMINI_API_ENDPOINT}")
+        return None
+    except requests.exceptions.HTTPError as e:
+        print(f"WARNING: API HTTP error {resp.status_code}: {e}")
+        return None
+    except Exception as e:
+        print(f"WARNING: API error: {e}")
+        return None
 
 
 __all__ = ["GEMINI_API_KEY", "GEMINI_API_ENDPOINT", "ensure_key", "stream_response_stub", "call_http_endpoint"]
@@ -178,7 +192,7 @@ def generate_response(prompt: str) -> str:
     Behavior:
     - If GEMINI_API_ENDPOINT is set, call the HTTP endpoint using the API key
       and return the best-effort text extraction from the response.
-    - Otherwise, join the local stubbed stream.
+    - If API fails, return a user-friendly error message instead of stub.
     """
     # If the configured endpoint looks like Google's Generative API or the key
     # header indicates Google, try the Google-specific caller first.
@@ -194,7 +208,8 @@ def generate_response(prompt: str) -> str:
             if out is not None:
                 return out
         except Exception as e:
-            print(f"Error calling Google generate endpoint: {e}")
+            # Don't print - let it continue to fallback
+            pass
 
     # Try generic HTTP endpoint next (real provider)
     if GEMINI_API_ENDPOINT:
@@ -203,14 +218,11 @@ def generate_response(prompt: str) -> str:
             if out is not None:
                 return out
         except Exception as e:
-            # Let caller see the exception via printing/logging; fall back to stub
-            print(f"Error calling GEMINI_API_ENDPOINT: {e}")
+            # Don't print - let it continue to fallback
+            pass
 
-    # Fallback to stubbed streaming response
-    parts = []
-    for p in stream_response_stub(prompt):
-        parts.append(p)
-    return "".join(parts)
+    # If both API calls failed/returned None, return error message instead of stub
+    return "I'm having trouble connecting to my AI backend right now. Please try again in a moment."
 
 
 def stream_generate(prompt: str):
@@ -222,15 +234,23 @@ def stream_generate(prompt: str):
     - Otherwise, fall back to the local `stream_response_stub`.
     """
     stream_flag = os.getenv("GEMINI_API_STREAM", "").lower() in ("1", "true", "yes")
-    payload = {"prompt": prompt}
+    
     if stream_flag and GEMINI_API_ENDPOINT and GEMINI_API_KEY:
-        # Try a permissive streaming read (best-effort; provider-specific streaming
-        # protocols may require WebSocket/gRPC instead)
+        # Check if it's a Google endpoint
+        is_google = "generativelanguage.googleapis.com" in GEMINI_API_ENDPOINT
+        
         headers = {"Content-Type": "application/json"}
         if GEMINI_API_KEY_HEADER:
             headers[GEMINI_API_KEY_HEADER] = GEMINI_API_KEY
         else:
             headers["Authorization"] = f"Bearer {GEMINI_API_KEY}"
+        
+        # Use proper payload format for Google API
+        if is_google:
+            payload = {"contents": [{"parts": [{"text": prompt}]}]}
+        else:
+            payload = {"prompt": prompt}
+        
         try:
             with requests.post(GEMINI_API_ENDPOINT, json=payload, headers=headers, stream=True, timeout=30) as resp:
                 resp.raise_for_status()
@@ -243,6 +263,19 @@ def stream_generate(prompt: str):
                         part = _json.loads(raw)
                         # Try to extract quick text fields from the JSON chunk
                         if isinstance(part, dict):
+                            # For Google API, check the proper structure
+                            if is_google and "candidates" in part:
+                                cands = part.get("candidates", [])
+                                if cands and isinstance(cands[0], dict):
+                                    content = cands[0].get("content", {})
+                                    if isinstance(content, dict):
+                                        parts = content.get("parts", [])
+                                        if parts and isinstance(parts[0], dict):
+                                            text = parts[0].get("text", "")
+                                            if text:
+                                                yield text
+                                                continue
+                            # Generic key search
                             for key in ("text", "content", "response"):
                                 if key in part and isinstance(part[key], str):
                                     yield part[key]
@@ -255,11 +288,21 @@ def stream_generate(prompt: str):
                     except Exception:
                         yield raw
             return
-        except Exception:
+        except Exception as e:
             # Fall through to stub if streaming attempt fails
+            print(f"Streaming failed: {e}")
             pass
 
-    # Fallback: stubbed stream
+    # Fallback: use blocking call instead of stub stream
+    try:
+        response = generate_response(prompt)
+        if response and "simulated" not in response.lower():
+            yield response
+            return
+    except Exception:
+        pass
+    
+    # Last resort: stubbed stream
     for p in stream_response_stub(prompt):
         yield p
 

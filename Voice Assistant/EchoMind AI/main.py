@@ -10,22 +10,12 @@ import re
 import time
 from dotenv import load_dotenv
 import pytz
-import gemini_client
-from urllib.parse import quote_plus
-import threading
-from ctypes import POINTER, cast
-try:
-    # pycaw is optional; we'll use it when available for native Windows volume control
-    from comtypes import CLSCTX_ALL
-    from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-    _PYCAW_AVAILABLE = True
-except Exception:
-    _PYCAW_AVAILABLE = False
-import shutil
-import shutil
 
-# Load environment variables
+# CRITICAL: Load environment variables BEFORE importing gemini_client
+# so that gemini_client can read GEMINI_API_ENDPOINT, GEMINI_API_KEY, etc.
 load_dotenv()
+
+import gemini_client
 
 # Detect operating system
 OS = platform.system().lower()
@@ -86,53 +76,66 @@ def log_interaction(user: str, response: str, source: str = "local"):
 
 def speak(text):
     """Cross-platform text-to-speech"""
-    print(f"Speaking: {text}")  # Debug print
-
-    def _run_tts(t):
-        try:
-            if OS == "windows":
-                # Use PowerShell with SAPI for Windows TTS
-                subprocess.run(["powershell", "-c", f'(New-Object -ComObject SAPI.SpVoice).Speak("{t}")'], capture_output=True)
-            elif OS == "darwin":  # macOS
-                # macOS TTS using say command
-                subprocess.run(["say", t], capture_output=True)
-            elif OS == "linux":
-                # Linux TTS using espeak (fallback to festival if available)
-                try:
-                    subprocess.run(["espeak", t], capture_output=True)
-                except FileNotFoundError:
-                    try:
-                        subprocess.run(["festival", "--tts"], input=t.encode(), capture_output=True)
-                    except FileNotFoundError:
-                        print(f"TTS not available on this Linux system. Text: {t}")
-            else:
-                print(f"TTS not supported on {OS}. Text: {t}")
-        except Exception as e:
-            print(f"Error in speaking: {e}")
-            print(f"Text was: {t}")  # Fallback to show text
-
-    # Run TTS in background thread so it doesn't block the main loop
+    # Strip Markdown formatting (asterisks, bold markers) before speaking
+    clean_text = text.replace("**", "").replace("*", "").replace("__", "").replace("_", "")
+    print(f"Speaking: {clean_text}")  # Debug print
     try:
-        t = threading.Thread(target=_run_tts, args=(text,), daemon=True)
-        t.start()
+        if OS == "windows":
+            # Use PowerShell with SAPI for Windows TTS
+            subprocess.run(["powershell", "-c", f'(New-Object -ComObject SAPI.SpVoice).Speak("{clean_text}")'], capture_output=True)
+        elif OS == "darwin":  # macOS
+            # macOS TTS using say command
+            subprocess.run(["say", clean_text], capture_output=True)
+        elif OS == "linux":
+            # Linux TTS using espeak (fallback to festival if available)
+            try:
+                subprocess.run(["espeak", clean_text], capture_output=True)
+            except FileNotFoundError:
+                try:
+                    subprocess.run(["festival", "--tts"], input=clean_text.encode(), capture_output=True)
+                except FileNotFoundError:
+                    print(f"TTS not available on this Linux system. Text: {clean_text}")
+        else:
+            print(f"TTS not supported on {OS}. Text: {clean_text}")
     except Exception as e:
-        print("Failed to start TTS thread:", e)
+        print(f"Error in speaking: {e}")
+        print(f"Text was: {clean_text}")  # Fallback to show text
 
 def listen():
     """Function to listen to user's voice command"""
-    # Try a couple of times before falling back to typed input
-    attempts = 2
+    # Try a few times before falling back to typed input. Increase timeouts
+    # so the assistant waits longer for the user to speak and for long phrases.
+    attempts = 3
+    # Use a slightly longer ambient calibration in noisy environments
+    ambient_duration = 1.5
+    listen_timeout = 8           # seconds to wait for phrase to start
+    phrase_time_limit = 12       # seconds max length of phrase
+
+    # enable dynamic energy thresholding for better adaption to environment
+    try:
+        recognizer.dynamic_energy_threshold = True
+        recognizer.pause_threshold = 1.2
+    except Exception:
+        pass
+
     for attempt in range(attempts):
         with sr.Microphone() as source:
             print("Listening...")
-            # Short ambient noise calibration to improve recognition in noisy environments
-            recognizer.adjust_for_ambient_noise(source, duration=0.5)
             try:
-                # Use timeout and phrase_time_limit to avoid blocking indefinitely
-                audio = recognizer.listen(source, timeout=5, phrase_time_limit=8)
+                recognizer.adjust_for_ambient_noise(source, duration=ambient_duration)
+            except Exception:
+                # ignore calibration errors and continue
+                pass
+
+            try:
+                # Wait up to `listen_timeout` seconds for the phrase to start and
+                # accept up to `phrase_time_limit` seconds for the whole phrase.
+                audio = recognizer.listen(source, timeout=listen_timeout, phrase_time_limit=phrase_time_limit)
             except sr.WaitTimeoutError:
                 print("Listening timed out waiting for phrase.")
-                speak("I didn't hear anything. Could you please repeat?")
+                # Be less noisy on repeated timeouts: only speak on the last attempt
+                if attempt == attempts - 1:
+                    speak("I didn't hear anything. Could you please repeat?")
                 continue
 
         try:
@@ -142,8 +145,9 @@ def listen():
         except sr.UnknownValueError:
             # Could not understand audio
             print("Speech not recognized (UnknownValueError)")
-            speak("Sorry, I didn't understand that. Could you repeat?")
-            # loop to retry
+            # Prompt to repeat; only speak on the final attempt to reduce noise
+            if attempt == attempts - 1:
+                speak("Sorry, I didn't understand that. Could you repeat?")
             continue
         except sr.RequestError as e:
             # API was unreachable or unresponsive
@@ -162,6 +166,48 @@ def listen():
         pass
 
     return ""
+
+def convert_spoken_symbols(text):
+    """Convert spoken punctuation marks and symbols into their actual characters"""
+    # Dictionary mapping spoken words to symbols
+    # Note: More specific patterns should come first to avoid partial matches
+    symbol_map = {
+        # Question mark - handle variations of how it might be spoken
+        r'\bquestion mark\b': '?',
+        r'\bquestion\s+mark\b': '?',
+        r'\bquestion\b$': '?',  # "question" at end of sentence
+        # Exclamation variations
+        r'\bexclamation mark\b': '!',
+        r'\bexclamation point\b': '!',
+        r'\bexclamation\b$': '!',  # at end
+        # Period variations
+        r'\bperiod\b': '.',
+        r'\bfull stop\b': '.',
+        r'\bdot\b': '.',
+        # Other punctuation
+        r'\bcomma\b': ',',
+        r'\bcolon\b': ':',
+        r'\bsemicolon\b': ';',
+        r'\bapostrophe\b': "'",
+        r'\bquote\b': '"',
+        r'\bdouble quote\b': '"',
+        r'\bleft paren\b|\bopening paren\b|\bparens\b': '(',
+        r'\bright paren\b|\bclosing paren\b': ')',
+        r'\bsquare bracket\b|\bleft bracket\b|\bleft square bracket\b': '[',
+        r'\bright bracket\b|\bclosing bracket\b|\bright square bracket\b': ']',
+        r'\bat sign\b': '@',
+        r'\bhash\b|\bhashtag\b|\bpound sign\b': '#',
+        r'\bdollar sign\b': '$',
+        r'\bpercent\b|\bpercent sign\b': '%',
+        r'\bampersand\b|\band sign\b': '&',
+        r'\basterisk\b|\bstar\b': '*',
+    }
+    
+    result = text
+    for spoken, symbol in symbol_map.items():
+        result = re.sub(spoken, symbol, result, flags=re.IGNORECASE)
+    
+    return result
 
 def get_time():
     """Get current time in IST"""
@@ -184,67 +230,6 @@ def search_web(query):
     speak(f"Searching for {query} on Google")
     log_interaction(query, f"Search opened: {query}", source="local")
 
-
-def direct_search(query=None):
-    """Open a Google search for the query and try to fetch a short summary.
-
-    This helper safely opens the user's default browser to Google and then
-    attempts to fetch a brief summary using DuckDuckGo Instant Answer API
-    (no API key required). The DuckDuckGo result is used only as a lightweight
-    spoken summary when available.
-    """
-    # If no query provided, ask the user
-    if not query:
-        speak("What would you like me to search for on Google?")
-        query = listen()
-        if not query:
-            speak("No search query provided.")
-            return
-
-    safe_q = query.strip()
-    url = f"https://www.google.com/search?q={quote_plus(safe_q)}"
-    try:
-        webbrowser.open(url)
-        speak(f"Opening Google search for {safe_q}")
-        # Try DuckDuckGo instant answer for a short summary
-        try:
-            ddg_url = (
-                "https://api.duckduckgo.com/?format=json&no_html=1&no_redirect=1&q="
-                + quote_plus(safe_q)
-            )
-            r = requests.get(ddg_url, timeout=5)
-            if r.status_code == 200:
-                body = r.json()
-                abstract = body.get("AbstractText") or body.get("Answer") or ""
-                if abstract:
-                    # Keep it short
-                    short = abstract.strip()
-                    if len(short) > 400:
-                        short = short[:400].rsplit(".", 1)[0] + "."
-                    speak(short)
-                    log_interaction(query, short, source="ddg")
-                    return
-                # Fallback to RelatedTopics snippet
-                topics = body.get("RelatedTopics") or []
-                if topics:
-                    # Try to find first text
-                    for t in topics:
-                        if isinstance(t, dict):
-                            text = t.get("Text") or t.get("Result") or None
-                            if text:
-                                speak(text)
-                                log_interaction(query, text, source="ddg_related")
-                                return
-        except Exception:
-            # If DuckDuckGo fails, don't block — we've already opened the browser
-            pass
-
-        # If no summary found, at least log the search
-        log_interaction(query, f"Search opened: {safe_q}", source="local")
-    except Exception as e:
-        speak("Sorry, I couldn't open the browser for that search.")
-        log_interaction(query, f"Search error: {e}", source="local")
-
 def get_weather(city):
     """Get weather information for a city"""
     try:
@@ -259,49 +244,6 @@ def get_weather(city):
             return "Sorry, I couldn't find weather information for that city."
     except Exception as e:
         return "Sorry, there was an error fetching the weather."
-
-
-def _pycaw_set_master_volume_percent(pct: float) -> bool:
-    """Set master volume to pct (0-100) using pycaw. Returns True on success."""
-    if not _PYCAW_AVAILABLE:
-        return False
-    try:
-        sessions = AudioUtilities.GetSpeakers()
-        interface = sessions.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume = cast(interface, POINTER(IAudioEndpointVolume))
-        scalar = max(0.0, min(1.0, pct / 100.0))
-        volume.SetMasterVolumeLevelScalar(scalar, None)
-        return True
-    except Exception:
-        return False
-
-
-def _pycaw_change_master_volume_by_percent(delta_pct: float) -> bool:
-    if not _PYCAW_AVAILABLE:
-        return False
-    try:
-        sessions = AudioUtilities.GetSpeakers()
-        interface = sessions.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume = cast(interface, POINTER(IAudioEndpointVolume))
-        cur = volume.GetMasterVolumeLevelScalar()
-        new = max(0.0, min(1.0, cur + delta_pct / 100.0))
-        volume.SetMasterVolumeLevelScalar(new, None)
-        return True
-    except Exception:
-        return False
-
-
-def _pycaw_get_master_volume_percent() -> float | None:
-    if not _PYCAW_AVAILABLE:
-        return None
-    try:
-        sessions = AudioUtilities.GetSpeakers()
-        interface = sessions.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume = cast(interface, POINTER(IAudioEndpointVolume))
-        cur = volume.GetMasterVolumeLevelScalar()
-        return float(cur * 100.0)
-    except Exception:
-        return None
 
 def get_greeting():
     """Get time-based greeting in IST"""
@@ -324,39 +266,302 @@ def main():
         command = listen()
         if not command:
             continue
+
+        # Convert spoken symbols to actual punctuation marks (e.g., "question mark" → "?")
+        command = convert_spoken_symbols(command)
+
+        # Skip if command is only a symbol (e.g., just "?", "!", ".", etc.)
+        if command and re.match(r'^[?!.,;:\'"()\[\]@#$%&*\-/+=~`|\\<>]+$', command.strip()):
+            speak("I didn't catch a complete command. Could you please say something more?")
+            continue
+
+        # Quick replies: 'thank you' variants
+        if any(phrase in command for phrase in ["thank you", "thanks", "thankyou", "thx", "thank"]):
+            speak("You are most welcome.... Happy to help you")
+            log_interaction(command, "You are most welcome.... Happy to help you", source="local")
+            continue
+
+        # If user just says a city name (short, alpha words only) treat it as a weather query.
+        # Avoid falsely matching common commands by checking against a small blacklist.
+        try:
+            words = command.split()
+            simple_city_candidate = False
+            # STRICT: Only match single-word city names (e.g., "Paris", "Tokyo")
+            # OR two-word cities (e.g., "New York") but NOT question phrases
+            if len(words) == 1 and re.match(r"^[a-zA-Z]{3,40}$", command):
+                # Single word city - check blacklist of common question/command words
+                blacklist_tokens = ("why", "what", "when", "where", "how", "do", "did", "does", "don't", "didn't", "tell", "is", "are", "be", "open", "hello", "hi")
+                if command.lower() not in blacklist_tokens:
+                    simple_city_candidate = True
+            
+            if simple_city_candidate:
+                # Try fetching weather for this candidate; if successful, respond and continue
+                weather_info = get_weather(command)
+                if weather_info and not weather_info.lower().startswith("sorry"):
+                    speak(weather_info)
+                    log_interaction(command, weather_info, source="local")
+                    continue
+        except Exception:
+            pass
         
-        # Greeting commands
-        if any(word in command for word in ["hello", "hi", "hey", "greetings"]):
-            speak("Hello! How can I help you?")
+        # Weather commands - check for weather-related keywords OR city names with weather context
+        # Patterns: "weather of CITY", "CITY weather", "weather in CITY", "CITY current weather", etc.
+        weather_match = re.search(r'\b(weather|forecast|temperature)\b.*\b(in|of|at|for|around)\s+(\w+)\b', command, re.IGNORECASE) or \
+                       re.search(r'\b(\w+)\s+(weather|forecast|temperature|current weather)\b', command, re.IGNORECASE) or \
+                       re.search(r'\b(weather|forecast|temperature|current weather)\b', command, re.IGNORECASE)
         
-        # Time commands
-        elif any(phrase in command for phrase in ["time", "what time", "what is the time", "what's the time", "current time", "tell me the time"]):
-            time_str = get_time()
-            speak(f"The current time is {time_str}")
-        
-        # Date commands
-        elif any(phrase in command for phrase in ["date", "what date", "what is the date", "what's the date", "today's date", "what day is it", "what is the day", "tell me the date", "current date", "current day"]):
-            date_info = get_date()
-            speak(f"Today's date is {date_info}")
-        
-        # Weather commands
-        elif any(word in command for word in ["weather", "forecast", "temperature"]):
-            speak("Which city would you like the weather for?")
-            city = listen()
+        if weather_match:
+            # Try to extract city name from the command
+            city = None
+            
+            # Try pattern: "weather of/in/for CITY"
+            match1 = re.search(r'\b(weather|forecast|temperature)\b.*\b(?:of|in|at|for|around)\s+(\w+)\b', command, re.IGNORECASE)
+            if match1:
+                city = match1.group(2)
+            
+            # Try pattern: "CITY weather/forecast" (but not "current")
+            if not city:
+                match2 = re.search(r'\b(\w+)\s+(weather|forecast|temperature|current weather)\b', command, re.IGNORECASE)
+                if match2:
+                    potential_city = match2.group(1).lower()
+                    # Don't use "current" as city name
+                    if potential_city not in ("current", "what", "tell", "give", "show", "get", "find"):
+                        city = match2.group(1)
+            
+            # If no city found, ask user
+            if not city:
+                speak("Which city would you like the weather for?")
+                city = listen()
+            
             if city:
                 weather_info = get_weather(city)
                 speak(weather_info)
                 log_interaction(command, weather_info, source="local")
+                continue
         
-        # Open app commands
-        elif any(word in command for word in ["open", "launch", "start"]):
+        # Greeting commands (use word boundaries to avoid matching "hi" in "hrithik")
+        if re.search(r'\b(hello|hi|hey|greetings)\b', command, re.IGNORECASE):
+            speak("Hello! How can I help you?")
+            log_interaction(command, "Hello! How can I help you?", source="local")
+            continue
+        
+        # Time commands (word boundary matching - must NOT match if part of "why" or other words)
+        elif re.search(r'\b(what time|what is the time|what\'s the time|current time|tell me the time|time now)\b', command, re.IGNORECASE):
+            time_str = get_time()
+            speak(f"The current time is {time_str}")
+            log_interaction(command, f"The current time is {time_str}", source="local")
+            continue
+        
+        # Date commands (word boundary matching)
+        elif re.search(r'\b(date|what date|what is the date|what\'s the date|today\'s date|what day is it|what is the day|tell me the date|current date|current day)\b', command, re.IGNORECASE):
+            date_info = get_date()
+            speak(f"Today's date is {date_info}")
+            log_interaction(command, f"Today's date is {date_info}", source="local")
+            continue
+        
+        # Web search and browser commands (e.g., "open youtube on google", "search hindi songs on google")
+        # This must come BEFORE generic "open app" handler to catch website/browser commands
+        elif re.search(r'\b(open|search)\b.*\b(on|in)\b.*\b(chrome|firefox|edge|google)\b', command, re.IGNORECASE):
+            # Parse: "open/search <query> on/in <browser>"
+            # Examples: "open youtube on google", "search hindi songs in firefox"
+            command_lower = command.lower()
+            
+            # Extract browser
+            browser = None
+            if "chrome" in command_lower or "google" in command_lower:
+                browser = "chrome"
+                browser_name = "chrome"
+            elif "firefox" in command_lower:
+                browser = "firefox"
+                browser_name = "firefox"
+            elif "edge" in command_lower:
+                browser = "edge"
+                browser_name = "microsoft edge"
+            
+            # Extract search query - everything between "open/search" and "on/in"
+            query = None
+            if " on " in command_lower:
+                parts = command_lower.split(" on ")
+                if len(parts) >= 2:
+                    query_part = parts[0]
+                    # Remove "open " or "search " prefix
+                    if query_part.startswith("open "):
+                        query = query_part[5:].strip()
+                    elif query_part.startswith("search "):
+                        query = query_part[7:].strip()
+                    else:
+                        query = query_part.strip()
+            elif " in " in command_lower:
+                parts = command_lower.split(" in ")
+                if len(parts) >= 2:
+                    query_part = parts[0]
+                    # Remove "open " or "search " prefix
+                    if query_part.startswith("open "):
+                        query = query_part[5:].strip()
+                    elif query_part.startswith("search "):
+                        query = query_part[7:].strip()
+                    else:
+                        query = query_part.strip()
+            
+            if browser and query:
+                try:
+                    # Check if query is a URL or a search term
+                    if query.startswith("http://") or query.startswith("https://") or "." in query:
+                        # It's likely a URL (youtube, wikipedia, etc.)
+                        url = query if query.startswith("http") else f"https://{query}"
+                    else:
+                        # It's a search query - use Google search
+                        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+                    
+                    # Launch the browser
+                    if browser == "chrome":
+                        if OS == "windows":
+                            subprocess.Popen(["cmd", "/c", f"start chrome {url}"], shell=True)
+                        elif OS == "darwin":
+                            subprocess.Popen(["open", "-a", "Google Chrome", url])
+                        elif OS == "linux":
+                            subprocess.Popen(["google-chrome", url])
+                    elif browser == "firefox":
+                        if OS == "windows":
+                            subprocess.Popen(["cmd", "/c", f"start firefox {url}"], shell=True)
+                        elif OS == "darwin":
+                            subprocess.Popen(["open", "-a", "Firefox", url])
+                        elif OS == "linux":
+                            subprocess.Popen(["firefox", url])
+                    elif browser == "edge":
+                        if OS == "windows":
+                            subprocess.Popen(["cmd", "/c", f"start msedge {url}"], shell=True)
+                        elif OS == "darwin":
+                            subprocess.Popen(["open", "-a", "Microsoft Edge", url])
+                        elif OS == "linux":
+                            subprocess.Popen(["microsoft-edge", url])
+                    
+                    speak(f"Opening {query} on {browser_name}")
+                    log_interaction(command, f"Opened {query} on {browser_name}", source="local")
+                except Exception as e:
+                    speak("Sorry, I couldn't open that in the browser.")
+                    print(f"Browser opening error: {e}")
+        
+        # Handle website/URL opening with default browser (e.g., "open youtube", "open wikipedia")
+        elif re.search(r'\b(open|visit|go to)\b\s+(youtube|wikipedia|reddit|github|facebook|twitter|instagram|gmail|google\.com|stack\s*overflow)', command, re.IGNORECASE):
+            command_lower = command.lower()
+            website_map = {
+                'youtube': 'https://www.youtube.com',
+                'wikipedia': 'https://www.wikipedia.com',
+                'reddit': 'https://www.reddit.com',
+                'github': 'https://www.github.com',
+                'facebook': 'https://www.facebook.com',
+                'twitter': 'https://www.twitter.com',
+                'instagram': 'https://www.instagram.com',
+                'gmail': 'https://mail.google.com',
+                'google': 'https://www.google.com',
+                'stackoverflow': 'https://stackoverflow.com',
+                'stack overflow': 'https://stackoverflow.com',
+            }
+            
+            # Find which website was mentioned
+            website = None
+            for site_key in website_map:
+                if site_key in command_lower:
+                    website = site_key
+                    break
+            
+            if website:
+                try:
+                    url = website_map[website]
+                    if OS == "windows":
+                        subprocess.Popen(["cmd", "/c", f"start chrome {url}"], shell=True)
+                    elif OS == "darwin":
+                        subprocess.Popen(["open", "-a", "Google Chrome", url])
+                    elif OS == "linux":
+                        subprocess.Popen(["google-chrome", url])
+                    speak(f"Opening {website}")
+                    log_interaction(command, f"Opened {website}", source="local")
+                except Exception as e:
+                    speak(f"Sorry, I couldn't open {website}.")
+                    print(f"Error: {e}")
+        
+        # Handle file opening (e.g., "open a pdf", "open a file", "open documents")
+        elif re.search(r'\b(open|show)\b.*(pdf|file|document|documents|folder|downloads|pictures|music|videos|explorer)', command, re.IGNORECASE):
+            command_lower = command.lower()
+            
+            # Map file types to common locations
+            location_map = {
+                'downloads': os.path.expanduser('~\\Downloads'),
+                'documents': os.path.expanduser('~\\Documents'),
+                'pictures': os.path.expanduser('~\\Pictures'),
+                'music': os.path.expanduser('~\\Music'),
+                'videos': os.path.expanduser('~\\Videos'),
+                'desktop': os.path.expanduser('~\\Desktop'),
+            }
+            
+            # Determine which location to open
+            location = None
+            for loc_key in location_map:
+                if loc_key in command_lower:
+                    location = location_map[loc_key]
+                    break
+            
+            # Default to opening file explorer
+            if not location:
+                if OS == "windows":
+                    location = os.path.expanduser('~\\Documents')
+                else:
+                    location = os.path.expanduser('~')
+            
+            try:
+                if OS == "windows":
+                    subprocess.Popen(["explorer", location])
+                elif OS == "darwin":
+                    subprocess.Popen(["open", location])
+                elif OS == "linux":
+                    subprocess.Popen(["nautilus", location])
+                
+                speak(f"Opening file explorer")
+                log_interaction(command, "Opened file explorer", source="local")
+            except Exception as e:
+                speak("Sorry, I couldn't open the file explorer.")
+                print(f"Error: {e}")
+        
+        # Open app commands (word boundary matching) - comes AFTER web/file handling
+        elif re.search(r'\b(open|launch|start)\b', command, re.IGNORECASE):
             app = None
-            # Try to extract app name from command
+            remaining_text = None
+            # Try to extract app name from command - only grab the first word (or microsoft/ms + word)
             command_lower = command.lower()
             for prefix in ["open ", "launch ", "start "]:
                 if command_lower.startswith(prefix):
-                    app = command[len(prefix):].strip()
+                    remainder = command[len(prefix):].strip()
+                    app_words = remainder.split()
+                    
+                    if len(app_words) >= 2:
+                        first_word = app_words[0].lower()
+                        # Check for multi-word apps (microsoft word, ms excel, etc.)
+                        if "microsoft" in first_word or first_word == "ms":
+                            app = " ".join(app_words[:2])
+                            remaining_text = " ".join(app_words[2:]) if len(app_words) > 2 else None
+                        elif first_word in COMMON_APPS:
+                            # Single-word app found
+                            app = first_word
+                            remaining_text = " ".join(app_words[1:]) if len(app_words) > 1 else None
+                        else:
+                            # Unknown app, just use first word
+                            app = first_word
+                            remaining_text = " ".join(app_words[1:]) if len(app_words) > 1 else None
+                    else:
+                        # Single word
+                        app = remainder
+                        remaining_text = None
                     break
+            
+            # Clean up connector words from remaining text (and, with, to, inside, etc.)
+            if remaining_text:
+                connector_words = ["and ", "with ", "to ", "inside ", "then ", "also "]
+                for connector in connector_words:
+                    if remaining_text.lower().startswith(connector):
+                        remaining_text = remaining_text[len(connector):].strip()
+                        break
+            
             if not app:
                 speak("Which app would you like to open?")
                 app = listen()
@@ -385,6 +590,29 @@ def main():
                             print(f"App launching not supported on {OS}")
                         speak(f"Opening {app}")
                         log_interaction(command, f"Opening {app}", source="local")
+                        
+                        # If there's remaining text (e.g., "write a hindi story"), process it with Gemini
+                        if remaining_text and remaining_text.strip():
+                            time.sleep(1)  # Give the app time to launch
+                            speak(f"Now, {remaining_text}")
+                            stream_flag = os.getenv("GEMINI_API_STREAM", "").lower() in ("1", "true", "yes")
+                            if stream_flag:
+                                try:
+                                    for chunk in gemini_client.stream_generate(remaining_text):
+                                        if chunk:
+                                            print("[stream chunk]", chunk)
+                                            speak(chunk)
+                                    log_interaction(remaining_text, "(streamed response)", source="gemini_stream")
+                                except Exception as e:
+                                    print("Streaming error:", e)
+                                    speak("Sorry, there was an error with the response.")
+                            else:
+                                response = gemini_client.generate_response(remaining_text)
+                                if response:
+                                    speak(response)
+                                    log_interaction(remaining_text, response, source="gemini")
+                                else:
+                                    speak("Sorry, I couldn't generate a response.")
                     except Exception as e:
                         speak("Sorry, I couldn't open that app.")
                 else:
@@ -400,89 +628,157 @@ def main():
                             print(f"App launching not supported on {OS}")
                         speak(f"Opening {app}")
                         log_interaction(command, f"Opening {app}", source="local")
+                        
+                        # If there's remaining text, process it with Gemini
+                        if remaining_text and remaining_text.strip():
+                            time.sleep(1)  # Give the app time to launch
+                            speak(f"Now, {remaining_text}")
+                            stream_flag = os.getenv("GEMINI_API_STREAM", "").lower() in ("1", "true", "yes")
+                            if stream_flag:
+                                try:
+                                    for chunk in gemini_client.stream_generate(remaining_text):
+                                        if chunk:
+                                            print("[stream chunk]", chunk)
+                                            speak(chunk)
+                                    log_interaction(remaining_text, "(streamed response)", source="gemini_stream")
+                                except Exception as e:
+                                    print("Streaming error:", e)
+                                    speak("Sorry, there was an error with the response.")
+                            else:
+                                response = gemini_client.generate_response(remaining_text)
+                                if response:
+                                    speak(response)
+                                    log_interaction(remaining_text, response, source="gemini")
+                                else:
+                                    speak("Sorry, I couldn't generate a response.")
                     except Exception as e:
                         speak("Sorry, I couldn't open that app.")
         
-        # Personal questions
-        elif any(phrase in command for phrase in ["how are you", "how do you do"]):
+        # Personal questions (word boundary matching)
+        elif re.search(r'\b(how are you|how do you do)\b', command, re.IGNORECASE):
             speak("I'm doing well, thank you! How can I assist you?")
             log_interaction(command, "I'm doing well, thank you! How can I assist you?", source="local")
         
-        elif any(phrase in command for phrase in ["your name", "who are you", "what are you"]):
+        elif re.search(r'\b(your name|who are you|what are you)\b', command, re.IGNORECASE):
             speak("I am EchoMind AI, your voice assistant.")
             log_interaction(command, "I am EchoMind AI, your voice assistant.", source="local")
 
-        # Volume control (basic, best-effort)
-        elif any(word in command for word in ["volume", "sound", "mute", "unmute", "increase", "decrease", "up", "down", "set volume", "set volume to", "set volume up", "set volume down"]):
-            # Parse intents: absolute set (to X%), relative change (by X%) or simple up/down
-            # Examples supported: "set volume to 60", "increase volume by 20", "decrease volume 10", "volume up"
-            # Find numeric percentage if present
+        # Volume control (word boundary matching)
+        elif re.search(r'\b(volume|sound|mute|unmute|increase|decrease)\b', command, re.IGNORECASE):
+            # Try to parse a percentage
             m = re.search(r"(\d{1,3})\s*%?", command)
-            perc = None
             if m:
-                try:
-                    perc = int(m.group(1))
-                    perc = max(0, min(100, perc))
-                except Exception:
-                    perc = None
-
-            # Detect increase vs decrease vs set
-            is_increase = any(tok in command for tok in ("increase", "up")) and "by" in command
-            is_decrease = any(tok in command for tok in ("decrease", "down")) and "by" in command
-            is_set = any(phrase in command for phrase in ("set volume to", "set volume")) or (perc is not None and ("to" in command or "set" in command))
-
-            # Helper to speak and log result
-            def _ack(msg):
-                speak(msg)
-                log_interaction(command, msg, source="local")
-
-            # Try nircmd on Windows if available
-            nircmd = None
-            if OS == "windows":
-                nircmd = shutil.which("nircmd") or shutil.which("nircmd.exe")
-
-            try:
-                if nircmd and OS == "windows":
-                    # nircmd uses 0-65535 volume scale
-                    scale = 65535
-                    if is_set and perc is not None:
-                        raw = int(perc / 100.0 * scale)
-                        subprocess.run([nircmd, "setsysvolume", str(raw)], check=False)
-                        _ack(f"Set volume to {perc} percent")
-                    elif (is_increase or ("increase" in command and "by" in command)) and perc is not None:
-                        delta = int(perc / 100.0 * scale)
-                        subprocess.run([nircmd, "changesysvolume", str(delta)], check=False)
-                        _ack(f"Increased volume by {perc} percent")
-                    elif (is_decrease or ("decrease" in command and "by" in command)) and perc is not None:
-                        delta = int(perc / 100.0 * scale)
-                        # changesysvolume accepts negative values to decrease
-                        subprocess.run([nircmd, "changesysvolume", str(-delta)], check=False)
-                        _ack(f"Decreased volume by {perc} percent")
-                    else:
-                        # No numeric provided: default +/- 10%
-                        default_delta = int(0.1 * scale)
-                        if any(tok in command for tok in ("increase", "up")):
-                            subprocess.run([nircmd, "changesysvolume", str(default_delta)], check=False)
-                            _ack("Increased volume")
-                        elif any(tok in command for tok in ("decrease", "down")):
-                            subprocess.run([nircmd, "changesysvolume", str(-default_delta)], check=False)
-                            _ack("Decreased volume")
-                        else:
-                            _ack("I can set the volume if you tell me a percentage, for example 'set volume to 60' or 'increase volume by 10'.")
+                perc = int(m.group(1))
+                perc = max(0, min(100, perc))
+                # Best-effort: try nircmd if installed (common Windows utility)
+                success = False
+                if OS == "windows":
+                    try:
+                        # nircmd expects 0-65535
+                        raw = int(perc / 100.0 * 65535)
+                        subprocess.run(["nircmd", "setsysvolume", str(raw)], check=False)
+                        success = True
+                    except Exception:
+                        success = False
+                if success:
+                    speak(f"Set volume to {perc} percent")
+                    log_interaction(command, f"Set volume to {perc}%", source="local")
                 else:
-                    # nircmd not available: instruct user how to enable or provide fallback
-                    if perc is not None and is_set:
-                        _ack(f"I can't change system volume from here. Please install nircmd (https://www.nirsoft.net/utils/nircmd.html) to enable setting the volume to {perc} percent automatically.")
-                    elif perc is not None and (is_increase or is_decrease):
-                        _ack(f"I can't change system volume from here. Please install nircmd to enable changing volume by {perc} percent automatically.")
-                    else:
-                        _ack("Volume control not available on this system. To enable programmatic volume control on Windows, install nircmd and add it to your PATH.")
-            except Exception as e:
-                print("Volume change error:", e)
-                speak("Sorry, I couldn't change the volume right now.")
+                    speak("Volume control not available on this system. Please install nircmd or manage volume manually.")
+                    log_interaction(command, "Volume change requested but not executed", source="local")
+            else:
+                # generic volume command
+                if "increase" in command or "up" in command:
+                    speak("Increasing the volume")
+                elif "decrease" in command or "down" in command:
+                    speak("Decreasing the volume")
+                else:
+                    speak("I can change volume if you tell me a percentage, for example 'set volume to 60'.")
+                log_interaction(command, "Volume command (no percent)", source="local")
         
-        # Exit commands
-        elif any(word in command for word in ["exit", "quit", "stop", "bye", "goodbye"]):
+        # Close application commands (e.g., "close camera", "close youtube", "close browser", "close chrome")
+        elif re.search(r'\b(close|shut|kill|terminate|stop)\b.*\b(camera|chrome|firefox|edge|browser|youtube|notepad|calculator|word|excel)\b', command, re.IGNORECASE):
+            command_lower = command.lower()
+            
+            # Extract the app to close
+            app_to_close = None
+            process_names = {
+                "camera": ["microsoft.windows.camera", "camera"],
+                "chrome": ["chrome.exe", "chrome"],
+                "google": ["chrome.exe", "chrome"],
+                "firefox": ["firefox.exe", "firefox"],
+                "edge": ["msedge.exe", "msedge"],
+                "browser": ["chrome.exe", "firefox.exe", "msedge.exe"],  # Close all browsers
+                "youtube": ["chrome.exe", "firefox.exe", "msedge.exe"],  # YouTube usually runs in browser
+                "notepad": ["notepad.exe"],
+                "calculator": ["calc.exe"],
+                "word": ["winword.exe"],
+                "excel": ["excel.exe"],
+                "powerpoint": ["powerpnt.exe"],
+                "ppt": ["powerpnt.exe"],
+            }
+            
+            # Find which app was mentioned
+            for app_key in process_names:
+                if app_key in command_lower:
+                    app_to_close = app_key
+                    break
+            
+            if app_to_close and app_to_close in process_names:
+                try:
+                    process_list = process_names[app_to_close]
+                    closed_count = 0
+                    
+                    if OS == "windows":
+                        for proc_name in process_list:
+                            try:
+                                # Use taskkill to forcefully close the process
+                                result = subprocess.run(
+                                    ["taskkill", "/IM", proc_name, "/F"],
+                                    capture_output=True,
+                                    text=True
+                                )
+                                # taskkill returns 0 if successful, other values if process not found
+                                if result.returncode == 0 or "terminated" in result.stdout.lower():
+                                    closed_count += 1
+                            except Exception as e:
+                                print(f"Could not close {proc_name}: {e}")
+                    
+                    elif OS == "darwin":  # macOS
+                        for proc_name in process_list:
+                            try:
+                                subprocess.run(
+                                    ["killall", proc_name],
+                                    capture_output=True
+                                )
+                                closed_count += 1
+                            except Exception:
+                                pass
+                    
+                    elif OS == "linux":
+                        for proc_name in process_list:
+                            try:
+                                subprocess.run(
+                                    ["killall", proc_name],
+                                    capture_output=True
+                                )
+                                closed_count += 1
+                            except Exception:
+                                pass
+                    
+                    if closed_count > 0:
+                        speak(f"Closing {app_to_close}")
+                        log_interaction(command, f"Closed {app_to_close}", source="local")
+                    else:
+                        speak(f"{app_to_close.capitalize()} is not currently running or could not be closed.")
+                        log_interaction(command, f"Could not close {app_to_close}", source="local")
+                
+                except Exception as e:
+                    speak(f"Sorry, I couldn't close {app_to_close}.")
+                    print(f"Error closing app: {e}")
+        
+        # Exit commands (word boundary matching)
+        elif re.search(r'\b(exit|quit|stop|bye|goodbye|terminate)\b', command, re.IGNORECASE):
             speak("Goodbye!")
             break
         
