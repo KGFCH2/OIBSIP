@@ -11,15 +11,19 @@
 ## 📋 Table of Contents
 
 1. [Features](#-features)
-2. [Architecture](#-architecture)
-3. [Quick Start](#-quick-start)
-4. [Installation](#-installation)
-5. [Configuration](#-configuration)
+2. [Command Features](#-command-features)
+3. [Architecture](#-architecture)
+4. [Quick Start](#-quick-start)
+5. [Configuration](#️-configuration)
 6. [Usage Examples](#-usage-examples)
 7. [Project Structure](#-project-structure)
 8. [Commands Reference](#-commands-reference)
-9. [Contributing](#-contributing)
-10. [License](#-license)
+9. [Handler System](#-handler-system)
+10. [Logging](#-logging)
+11. [Troubleshooting](#-troubleshooting)
+12. [Contributing](#-contributing)
+13. [License](#-license)
+14. [Support](#-support)
 
 ---
 
@@ -620,13 +624,7 @@ Contributions are welcome! Please:
 
 ---
 
-## 📝 License
-
-This project is licensed under the MIT License - see LICENSE file for details.
-
----
-
-## 📚 Additional Documentation
+##  Additional Documentation
 
 For detailed feature documentation, see:
 
