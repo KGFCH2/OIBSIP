@@ -23,6 +23,8 @@ from handlers.app_handler import handle_app_opening
 from handlers.personal_handler import handle_personal_questions
 from handlers.text_input_handler import handle_text_input
 from handlers.volume_handler import handle_volume
+from handlers.brightness_handler import handle_brightness
+from handlers.emoji_handler import handle_emoji_mode
 from handlers.close_app_handler import handle_app_closing
 from handlers.tab_navigation_handler import handle_tab_navigation
 from handlers.system_folder_handler import handle_system_folder_opening
@@ -64,6 +66,8 @@ def route_command(command):
         ("App opening", handle_app_opening),
         ("Personal questions", handle_personal_questions),
         ("Volume control", handle_volume),
+        ("Brightness control", handle_brightness),
+        ("Emoji mode", handle_emoji_mode),
         ("Tab navigation", handle_tab_navigation),
         ("App closing", handle_app_closing),
         ("Exit", handle_exit),

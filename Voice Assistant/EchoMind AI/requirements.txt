@@ -4,3 +4,4 @@ python-dotenv
 pytz
 pyttsx3
 beautifulsoup4
+pynput

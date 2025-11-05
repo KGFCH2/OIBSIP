@@ -110,6 +110,12 @@
 | **Volume** | "Increase volume" | Raises speaker volume |
 | | "Decrease volume" | Lowers speaker volume |
 | | "Mute" | Mutes audio |
+| **Brightness** | "Make brightness 50" | Sets brightness to 50% |
+| | "Brightness seventy" | Sets brightness to 70% |
+| | "Increase brightness" | Increases to 75% |
+| | "Decrease brightness" | Decreases to 25% |
+| **Emoji** | "Open emoji" | Opens emoji picker |
+| | "Show emoji" | Opens emoji picker |
 | **Battery** | "Battery status" | Reports battery level |
 | | "Check battery" | Battery percentage |
 | **USB Devices** | "USB status" | Lists connected USB devices |
@@ -440,13 +446,15 @@ EchoMind AI/
 │   ├── __init__.py
 │   ├── __pycache__/
 │   └── settings.py                # Settings & constants
-├── 🗂️ handlers/                   # Command handlers (20+)
+├── 🗂️ handlers/                   # Command handlers (22+)
 │   ├── __init__.py
 │   ├── __pycache__/
 │   ├── app_handler.py             # App opening/launching
 │   ├── battery_handler.py         # Battery status monitoring
+│   ├── brightness_handler.py      # Brightness control
 │   ├── close_app_handler.py       # App closing/tab control
 │   ├── date_handler.py            # Date queries
+│   ├── emoji_handler.py           # Emoji picker
 │   ├── exit_handler.py            # Exit command
 │   ├── file_handler.py            # File operations
 │   ├── file_writing_handler.py    # File writing operations
@@ -495,6 +503,25 @@ EchoMind AI/
 | "USB devices" | List of connected USB |
 | "Increase volume" | Raises volume |
 | "Decrease volume" | Lowers volume |
+| "Make brightness 50" | Sets brightness to 50% |
+| "Brightness seventy" | Sets brightness to 70% |
+| "Open emoji" | Opens emoji picker |
+
+### Brightness Control
+| Say | Response |
+|-----|----------|
+| "Make brightness 40%" | Sets brightness to 40% |
+| "Brightness 50" | Sets brightness to 50% |
+| "Set brightness to seventy" | Sets brightness to 70% |
+| "Increase brightness" | Increases to 75% |
+| "Decrease brightness" | Decreases to 25% |
+
+### Emoji Mode
+| Say | Response |
+|-----|----------|
+| "Open emoji" | Opens emoji picker |
+| "Show emoji" | Opens emoji picker |
+| "Emoji picker" | Opens emoji picker |
 
 ### Files & Folders
 | Say | Response |
@@ -526,6 +553,7 @@ EchoMind AI/
 |-----|----------|
 | "Hello" | Greeting response |
 | "Thank you" | Thank you response |
+| "Open emoji" | Opens emoji picker |
 | "Exit" / "Quit" | Closes application |
 
 ---
@@ -634,9 +662,7 @@ Contributions are welcome! Please:
 
 For detailed feature documentation, see:
 
-- **Tab Navigation:** `TAB_NAVIGATION_FEATURE.md`
-- **System Folders & Drives:** `SYSTEM_FOLDER_DRIVE_OPENING_FEATURE.md`
-- **Drive Closing/Ejection:** `DRIVE_CLOSING_FEATURE.md`
+- **Brightness & Emoji Features:** `QUICK_START_BRIGHTNESS_EMOJI.md`
 
 ---
 
