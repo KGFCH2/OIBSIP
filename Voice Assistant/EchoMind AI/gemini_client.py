@@ -399,6 +399,25 @@ def generate_response(prompt: str) -> str:
       and return the best-effort text extraction from the response.
     - If API fails, return a user-friendly error message instead of stub.
     """
+    # Inject current date into prompt for accurate time-based answers
+    import datetime
+    from datetime import datetime as dt
+    now = dt.now()
+    current_date = now.strftime("%B %d, %Y")  # e.g., "November 05, 2025"
+    current_time = now.strftime("%H:%M:%S")   # e.g., "14:30:45"
+    
+    # Enhanced prompt with date/time context
+    enhanced_prompt = prompt
+    if GEMINI_PROMPT_WRAPPER:
+        # Replace placeholder dates if they exist, or prepend date info
+        wrapper = GEMINI_PROMPT_WRAPPER
+        # Add current date/time to wrapper if not already there
+        if "current date" not in wrapper.lower():
+            wrapper = f"Today's date is {current_date} and the current time is {current_time}. " + wrapper
+        enhanced_prompt = wrapper + "\n\n" + prompt
+    else:
+        enhanced_prompt = f"Today's date is {current_date} and the current time is {current_time}. " + prompt
+    
     # If the configured endpoint looks like Google's Generative API or the key
     # header indicates Google, try the Google-specific caller first.
     try_google = False
@@ -409,7 +428,7 @@ def generate_response(prompt: str) -> str:
 
     if try_google and GEMINI_API_ENDPOINT:
         try:
-            out = call_google_generate(prompt)
+            out = call_google_generate(enhanced_prompt)
             if out is not None:
                 return out
         except Exception as e:
@@ -419,7 +438,7 @@ def generate_response(prompt: str) -> str:
     # Try generic HTTP endpoint next (real provider)
     if GEMINI_API_ENDPOINT:
         try:
-            out = call_http_endpoint(prompt)
+            out = call_http_endpoint(enhanced_prompt)
             if out is not None:
                 return out
         except Exception as e:
@@ -440,6 +459,24 @@ def stream_generate(prompt: str):
     """
     import re
     import json as _json
+    import datetime
+    from datetime import datetime as dt
+    
+    # Inject current date into prompt for accurate time-based answers
+    now = dt.now()
+    current_date = now.strftime("%B %d, %Y")  # e.g., "November 05, 2025"
+    current_time = now.strftime("%H:%M:%S")   # e.g., "14:30:45"
+    
+    # Enhanced prompt with date/time context
+    enhanced_prompt = prompt
+    if GEMINI_PROMPT_WRAPPER:
+        wrapper = GEMINI_PROMPT_WRAPPER
+        # Add current date/time to wrapper if not already there
+        if "current date" not in wrapper.lower():
+            wrapper = f"Today's date is {current_date} and the current time is {current_time}. " + wrapper
+        enhanced_prompt = wrapper + "\n\n" + prompt
+    else:
+        enhanced_prompt = f"Today's date is {current_date} and the current time is {current_time}. " + prompt
     
     stream_flag = os.getenv("GEMINI_API_STREAM", "").lower() in ("1", "true", "yes")
     
@@ -455,12 +492,12 @@ def stream_generate(prompt: str):
             headers["Authorization"] = f"Bearer {GEMINI_API_KEY}"
         
         # Use proper payload format for Google API
-        prompt_to_send = prompt
+        prompt_to_send = enhanced_prompt
         if GEMINI_RESPONSE_MODE == "plain_text":
             if GEMINI_PROMPT_WRAPPER:
-                prompt_to_send = GEMINI_PROMPT_WRAPPER + "\n\n" + prompt
+                prompt_to_send = GEMINI_PROMPT_WRAPPER + "\n\n" + enhanced_prompt
             else:
-                prompt_to_send = "Respond only with the final answer in plain text. Do not include JSON, metadata, or code fences.\n\n" + prompt
+                prompt_to_send = "Respond only with the final answer in plain text. Do not include JSON, metadata, or code fences.\n\n" + enhanced_prompt
 
         if is_google:
             payload = {"contents": [{"parts": [{"text": prompt_to_send}]}]}

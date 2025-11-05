@@ -49,3 +49,55 @@ def clean_connector_words(text):
         if text.lower().startswith(connector):
             return text[len(connector):].strip()
     return text
+
+def is_question(text):
+    """Detect if text is a question based on question words or punctuation"""
+    if not text:
+        return False
+    
+    # Check if ends with question mark
+    if text.strip().endswith('?'):
+        return True
+    
+    # Common question words
+    question_words = [
+        r'\bhow\b', r'\bwhat\b', r'\bwhen\b', r'\bwhere\b', r'\bwhy\b', r'\bwhom\b',
+        r'\bwhose\b', r'\bwhich\b', r'\bdo\b', r'\bdoes\b', r'\bdid\b',
+        r'\bcould\b', r'\bcan\b', r'\bwill\b', r'\bshould\b', r'\bwould\b',
+        r'\bmay\b', r'\bmight\b', r'\bmust\b', r'\bhas\b', r'\bhave\b',
+        r'\bis\b', r'\bare\b', r'\bwas\b', r'\bwere\b'
+    ]
+    
+    text_lower = text.lower().strip()
+    for pattern in question_words:
+        if re.search(pattern, text_lower):
+            return True
+    
+    return False
+
+def ensure_question_mark_if_question(command, response=None):
+    """
+    Add ? to command if it's a question (for logging purposes)
+    
+    Args:
+        command: The user's command/question
+        response: Ignored, kept for backward compatibility
+    
+    Returns:
+        Command with ? added if it's a question, otherwise unchanged
+    """
+    if not command:
+        return command
+    
+    # Check if command is a question
+    if is_question(command):
+        command = command.strip()
+        
+        # Remove trailing punctuation to add ? only
+        command = re.sub(r'[.!]+$', '', command).strip()
+        
+        # Add question mark if not already there
+        if not command.endswith('?'):
+            command = command + '?'
+    
+    return command

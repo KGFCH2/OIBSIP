@@ -28,4 +28,4 @@ def get_greeting():
     elif 17 <= hour < 22:
         return "Good evening! I am EchoMind AI, your voice assistant. How can I help you?"
     else:
-        return "Good night! I am EchoMind AI, your voice assistant. It is time to rest."
+        return "Hey there! I am EchoMind AI, your voice assistant. It is time to rest after a hectic day."

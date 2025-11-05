@@ -164,73 +164,147 @@ def handle_app_opening(command):
                 speak("Sorry, I couldn't open that app.")
                 return False
         else:
-            # Try to find the app from installed apps
-            installed_apps = find_installed_apps()
-            
-            # Search for the app (exact match first, then partial match)
-            matched_app = None
-            if app_clean in installed_apps:
-                matched_app = app_clean
+            # NEW APPROACH: Use Windows Search to find and open the app
+            if OS == "windows":
+                return _open_app_with_windows_search(app, command, remaining_text)
             else:
-                # Partial match search
-                for app_key in installed_apps:
-                    if app_clean in app_key or app_key in app_clean:
-                        matched_app = app_key
-                        break
-            
-            if matched_app:
-                try:
-                    if OS == "windows":
-                        # Try to launch using the app name
-                        subprocess.run(["cmd", "/c", "start", matched_app], shell=True)
-                    elif OS == "darwin":
-                        subprocess.run(["open", "-a", matched_app], capture_output=True)
-                    elif OS == "linux":
-                        subprocess.run([matched_app], capture_output=True)
-                    
-                    speak(f"Opening {app}")
-                    log_interaction(command, f"Opening {app}", source="local")
-                    
-                    # If there's remaining text, process it
-                    if remaining_text and remaining_text.strip():
-                        _process_remaining_text(remaining_text)
-                    return True
-                except Exception as e:
-                    print(f"Error launching app: {e}")
-            
-            # If not found in registry, try direct launch
+                # For non-Windows, use the old approach
+                return _open_app_legacy(app, app_clean, command, remaining_text)
+    
+    return False
+
+
+def _open_app_with_windows_search(app, command, remaining_text):
+    """Open app using Windows Search (Windows key + S)
+    
+    This method:
+    1. Opens Windows Search (Win + S)
+    2. Types the app name
+    3. Waits for search results
+    4. Presses Enter to open the first result
+    """
+    try:
+        import pyautogui
+        import time as time_module
+        
+        speak(f"Searching for {app} on your device")
+        
+        # Press Windows key + S to open search
+        pyautogui.hotkey('win', 's')
+        time_module.sleep(1)  # Wait for search box to open
+        
+        # Type the app name
+        pyautogui.typewrite(app, interval=0.05)
+        time_module.sleep(1)  # Wait for search results to populate
+        
+        # Press Enter to open the first result
+        pyautogui.press('enter')
+        time_module.sleep(2)  # Wait for app to start
+        
+        speak(f"Opening {app}")
+        log_interaction(command, f"Opening {app} via Windows Search", source="windows_search")
+        
+        # If there's remaining text, process it
+        if remaining_text and remaining_text.strip():
+            _process_remaining_text(remaining_text)
+        
+        return True
+    except ImportError:
+        speak("Error: pyautogui is not installed. Installing it...")
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "pyautogui"], 
+                         capture_output=True, check=True)
+            # Try again after installation
+            return _open_app_with_windows_search(app, command, remaining_text)
+        except Exception as e:
+            print(f"Could not install pyautogui: {e}")
+            speak("Could not open the app. Please check if it's installed.")
+            return False
+    except Exception as e:
+        print(f"Error opening app with Windows Search: {e}")
+        speak("Could not open the app. Please try again.")
+        return False
+
+
+def _open_app_legacy(app, app_clean, command, remaining_text):
+    """Legacy method for opening apps (non-Windows or fallback)"""
+    try:
+        # Try to find the app from installed apps
+        installed_apps = find_installed_apps()
+        
+        # Search for the app (exact match first, then partial match)
+        matched_app = None
+        if app_clean in installed_apps:
+            matched_app = app_clean
+        else:
+            # Partial match search
+            for app_key in installed_apps:
+                if app_clean in app_key or app_key in app_clean:
+                    matched_app = app_key
+                    break
+        
+        if matched_app:
             try:
                 if OS == "windows":
-                    subprocess.run(["cmd", "/c", "start", app_clean], shell=True)
+                    subprocess.run(["cmd", "/c", "start", matched_app], shell=True)
                 elif OS == "darwin":
-                    subprocess.run(["open", "-a", app_clean], capture_output=True)
+                    subprocess.run(["open", "-a", matched_app], capture_output=True)
                 elif OS == "linux":
-                    subprocess.run(["xdg-open", app_clean], capture_output=True)
+                    subprocess.run([matched_app], capture_output=True)
                 
                 speak(f"Opening {app}")
                 log_interaction(command, f"Opening {app}", source="local")
                 
-                # If there's remaining text, process it with Gemini
+                # If there's remaining text, process it
                 if remaining_text and remaining_text.strip():
                     _process_remaining_text(remaining_text)
                 return True
             except Exception as e:
-                speak("Sorry, I couldn't open that app.")
-                return False
-    
-    return False
+                print(f"Error launching app: {e}")
+        
+        # If not found in registry, try direct launch
+        try:
+            if OS == "windows":
+                subprocess.run(["cmd", "/c", "start", app_clean], shell=True)
+            elif OS == "darwin":
+                subprocess.run(["open", "-a", app_clean], capture_output=True)
+            elif OS == "linux":
+                subprocess.run(["xdg-open", app_clean], capture_output=True)
+            
+            speak(f"Opening {app}")
+            log_interaction(command, f"Opening {app}", source="local")
+            
+            # If there's remaining text, process it with Gemini
+            if remaining_text and remaining_text.strip():
+                _process_remaining_text(remaining_text)
+            return True
+        except Exception as e:
+            speak("Sorry, I couldn't open that app.")
+            return False
+    except Exception as e:
+        speak("Sorry, I couldn't open that app.")
+        return False
 
 def _process_remaining_text(text):
     """Helper function to process remaining text with Gemini
     
     BUT: Don't process if text is just app control commands (close, shutdown, etc)
+    or common app-related keywords that shouldn't trigger Gemini
     """
     import gemini_client
     
-    # Check if remaining text is just an app control command
-    if re.search(r'\b(close|shut|kill|terminate|stop|shutdown)\b', text, re.IGNORECASE):
-        # This is a close/control command, don't process through Gemini
-        # It should be handled separately
+    # Keywords that shouldn't trigger Gemini processing
+    skip_keywords = [
+        'app', 'application', 'software', 'program',
+        'tool', 'utility', 'system', 'desktop',
+        'open', 'launch', 'start', 'run'
+    ]
+    
+    text_lower = text.lower().strip()
+    
+    # Check if text is just a single skip keyword or close command
+    if text_lower in skip_keywords or re.search(r'\b(close|shut|kill|terminate|stop|shutdown)\b', text, re.IGNORECASE):
+        # This is just a control keyword or command, don't process through Gemini
         return False
     
     time.sleep(1)  # Give the app time to launch

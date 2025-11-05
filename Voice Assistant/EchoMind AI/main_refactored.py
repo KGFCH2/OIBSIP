@@ -24,12 +24,16 @@ from handlers.personal_handler import handle_personal_questions
 from handlers.text_input_handler import handle_text_input
 from handlers.volume_handler import handle_volume
 from handlers.close_app_handler import handle_app_closing
+from handlers.tab_navigation_handler import handle_tab_navigation
+from handlers.system_folder_handler import handle_system_folder_opening
 from handlers.music_handler import handle_play_music, handle_play_on_youtube
 from handlers.exit_handler import handle_exit
+from handlers.battery_handler import handle_battery_status, start_battery_monitoring, stop_battery_monitoring
+from handlers.usb_detection_handler import handle_usb_detection, start_usb_monitoring, stop_usb_monitoring
 
 # Import utilities
 from utils.voice_io import speak, listen, speak_stream
-from utils.text_processing import convert_spoken_symbols, is_symbol_only
+from utils.text_processing import convert_spoken_symbols, is_symbol_only, ensure_question_mark_if_question
 from utils.time_utils import get_greeting
 from utils.logger import log_interaction
 
@@ -45,18 +49,22 @@ def route_command(command):
         ("Greeting", handle_greeting),
         ("Time", handle_time),
         ("Date", handle_date),
+        ("USB detection", handle_usb_detection),
         ("Browser search", handle_browser_search),
         ("Website opening", handle_website_opening),
         ("Simple city weather", handle_simple_city_weather),
         ("Weather", handle_weather),
         ("WhatsApp", handle_whatsapp_web),
+        ("Battery status", handle_battery_status),
         ("File writing", handle_file_writing),
         ("Music (YouTube play)", handle_play_on_youtube),
         ("Music (play)", handle_play_music),
         ("File opening", handle_file_opening),
+        ("System folder opening", handle_system_folder_opening),
         ("App opening", handle_app_opening),
         ("Personal questions", handle_personal_questions),
         ("Volume control", handle_volume),
+        ("Tab navigation", handle_tab_navigation),
         ("App closing", handle_app_closing),
         ("Exit", handle_exit),
     ]
@@ -81,8 +89,15 @@ def route_command(command):
 
 
 def handle_gemini_fallback(command):
-    """Handle unknown commands with Gemini"""
+    """Handle unknown commands with Gemini
+    
+    Note: 'command' parameter should already have ? added if it's a question
+    from the main() function's ensure_question_mark_if_question() call
+    """
     try:
+        # Use command as-is (already formatted with ? in main if needed)
+        formatted_command = command
+        
         stream_flag = os.getenv("GEMINI_API_STREAM", "").lower() in ("1", "true", "yes")
         if stream_flag:
             try:
@@ -98,10 +113,10 @@ def handle_gemini_fallback(command):
                     if response and "trouble" not in response.lower():
                         print(response)
                         speak(response)
-                        log_interaction(command, response, source="gemini_fallback")
+                        log_interaction(formatted_command, response, source="gemini_fallback")
                     else:
                         speak("Sorry, I couldn't generate a response.")
-                        log_interaction(command, "No response returned", source="gemini_stream")
+                        log_interaction(formatted_command, "No response returned", source="gemini_stream")
                     return
                 
                 # Normalize and clean the complete response
@@ -111,18 +126,18 @@ def handle_gemini_fallback(command):
                 # Use cleaned response if available, otherwise use final_text
                 response_to_use = final_clean if final_clean else final_text
                 if response_to_use and response_to_use.strip():
-                    # Print and speak ONCE
+                    # Print and speak ONCE (no ? added to response)
                     print(response_to_use)
                     speak(response_to_use)
-                    log_interaction(command, response_to_use, source="gemini_stream")
+                    log_interaction(formatted_command, response_to_use, source="gemini_stream")
                 else:
                     speak("Sorry, I couldn't generate a response.")
-                    log_interaction(command, "No response returned", source="gemini_stream")
+                    log_interaction(formatted_command, "No response returned", source="gemini_stream")
                 
             except Exception as e:
                 print(f"Streaming error: {e}")
                 speak("Sorry, there was an error with streaming response.")
-                log_interaction(command, f"Streaming error: {e}", source="gemini_stream")
+                log_interaction(formatted_command, f"Streaming error: {e}", source="gemini_stream")
         else:
             response = gemini_client.generate_response(command)
             if response:
@@ -132,14 +147,14 @@ def handle_gemini_fallback(command):
                 if final_clean:
                     print(final_clean)
                     speak(final_clean)
-                    log_interaction(command, final_clean, source="gemini")
+                    log_interaction(formatted_command, final_clean, source="gemini")
                 else:
                     print(response)
                     speak(response)
-                    log_interaction(command, response, source="gemini")
+                    log_interaction(formatted_command, response, source="gemini")
             else:
                 speak("Sorry, I couldn't generate a response.")
-                log_interaction(command, "No response returned", source="gemini")
+                log_interaction(formatted_command, "No response returned", source="gemini")
     except Exception as e:
         print(f"Gemini error: {e}")
         speak("Sorry, I couldn't process that right now.")
@@ -148,37 +163,49 @@ def handle_gemini_fallback(command):
 
 def main():
     """Main function - voice assistant loop"""
+    # Start background monitoring threads
+    start_battery_monitoring()
+    start_usb_monitoring()
+    
     greeting = get_greeting()
     speak(greeting)
     
-    while True:
-        # Listen for command
-        command = listen()
-        if not command:
-            continue
-        
-        # Convert spoken symbols to actual punctuation marks
-        command = convert_spoken_symbols(command)
-        
-        # Skip if command is only symbols
-        if command and is_symbol_only(command):
-            speak("I didn't catch a complete command. Could you please say something more?")
-            continue
-        
-        # Route the command to handlers
-        result = route_command(command)
-        
-        if result == "exit":
-            speak("Goodbye!")
-            break
-        elif result == "handled":
-            # Handler already processed the command
-            time.sleep(0.5)  # Small delay to avoid rate limiting
-            continue
-        else:
-            # No handler matched, try Gemini
-            handle_gemini_fallback(command)
-            time.sleep(0.5)  # Small delay between API calls to avoid rate limiting
+    try:
+        while True:
+            # Listen for command
+            command = listen()
+            if not command:
+                continue
+            
+            # Convert spoken symbols to actual punctuation marks
+            command = convert_spoken_symbols(command)
+            
+            # Skip if command is only symbols
+            if command and is_symbol_only(command):
+                speak("I didn't catch a complete command. Could you please say something more?")
+                continue
+            
+            # Format command with ? if it's a question (for logging)
+            formatted_command = ensure_question_mark_if_question(command, None)
+            
+            # Route the command to handlers
+            result = route_command(formatted_command)
+            
+            if result == "exit":
+                speak("Goodbye!")
+                break
+            elif result == "handled":
+                # Handler already processed the command
+                time.sleep(0.5)  # Small delay to avoid rate limiting
+                continue
+            else:
+                # No handler matched, try Gemini
+                handle_gemini_fallback(formatted_command)
+                time.sleep(0.5)  # Small delay between API calls to avoid rate limiting
+    finally:
+        # Stop background monitoring threads
+        stop_battery_monitoring()
+        stop_usb_monitoring()
 
 
 if __name__ == "__main__":
