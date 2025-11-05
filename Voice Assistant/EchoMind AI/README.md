@@ -12,7 +12,7 @@
 
 1. [Features](#-features)
 2. [Command Features](#-command-features)
-3. [Architecture](#-architecture)
+3. [Architecture](#️-architecture)
 4. [Quick Start](#-quick-start)
 5. [Configuration](#️-configuration)
 6. [Usage Examples](#-usage-examples)
@@ -22,8 +22,12 @@
 10. [Logging](#-logging)
 11. [Troubleshooting](#-troubleshooting)
 12. [Contributing](#-contributing)
-13. [License](#-license)
-14. [Support](#-support)
+13. [Additional Documentation](#-additional-documentation)
+14. [Roadmap](#-roadmap)
+15. [FAQ](#-faq)
+16. [Support](#-support)
+17. [License](#-license)
+18. [Credits](#-credits)
 
 ---
 
@@ -624,7 +628,7 @@ Contributions are welcome! Please:
 
 ---
 
-##  Additional Documentation
+## 📚 Additional Documentation
 
 For detailed feature documentation, see:
 
