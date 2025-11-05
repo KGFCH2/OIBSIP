@@ -736,6 +736,6 @@ Built with Python, integrated with:
 
 <div align="center">
 
-### 📖 [Back to Top](#-echomind-ai---voice-assistant) ⬆️
+### 📖 [Back to Top](#echomind-ai---voice-assistant) ⬆️
 
 </div>
