@@ -2,6 +2,10 @@
 
 > Advanced Python-based voice assistant with natural language processing, intelligent command routing, and multiple integration features.
 
+**Author:** Babin Bid  
+**Repository:** https://github.com/KGFCH2/OIBSIP/tree/main/Voice%20Assistant/EchoMind%20AI  
+**License:** MIT License
+
 ---
 
 ## 📋 Table of Contents
@@ -678,6 +682,37 @@ For issues, questions, or suggestions:
 
 ---
 
+## 📝 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+### License Summary
+
+This is **Babin Bid's personal project**. You are free to:
+- ✅ Use for personal, educational, or commercial purposes
+- ✅ Modify and distribute the code
+- ✅ Create derivative works
+- ✅ Use commercially
+
+You must:
+- 📋 Include the original license and copyright notice
+- 📋 Document any significant modifications
+- 📋 Provide a copy of the LICENSE file with distributions
+
+### Third-Party Libraries
+
+This project uses several open-source libraries:
+- **pyttsx3** - Text-to-speech (Apache License 2.0)
+- **SpeechRecognition** - Speech recognition (BSD 3-Clause License)
+- **google-generativeai** - Google Gemini AI integration (Apache License 2.0)
+- **pyautogui** - GUI automation (BSD 3-Clause License)
+- **requests** - HTTP library (Apache License 2.0)
+- **python-dotenv** - Environment variable management (BSD 3-Clause License)
+
+See `requirements.txt` and individual package documentation for more details.
+
+---
+
 ## 🎉 Credits
 
 Built with Python, integrated with:
@@ -685,6 +720,9 @@ Built with Python, integrated with:
 - Windows API
 - pyautogui for automation
 - pyttsx3 for text-to-speech
+
+**Project Author:** Babin Bid  
+**GitHub:** https://github.com/KGFCH2/OIBSIP/tree/main/Voice%20Assistant/EchoMind%20AI
 
 ---
 

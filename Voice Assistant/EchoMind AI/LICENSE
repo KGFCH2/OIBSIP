@@ -1,0 +1,92 @@
+MIT License
+
+Copyright (c) 2025 Babin Bid
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Additional Terms for Personal Use
+
+This project, **EchoMind AI**, is a personal project developed by **Babin Bid**.
+
+### Project Details
+- **Project Name:** EchoMind AI - Voice Assistant
+- **Author:** Babin Bid
+- **Created:** 2025
+- **Purpose:** Advanced Python-based voice assistant with natural language processing
+- **Status:** Production Ready
+- **Repository:** https://github.com/KGFCH2/OIBSIP/tree/main/Voice%20Assistant/EchoMind%20AI
+
+### What You Can Do
+✅ Use this software freely for personal, educational, or commercial purposes
+✅ Modify the source code to suit your needs
+✅ Distribute copies with proper attribution
+✅ Include it in your own projects
+✅ Create derivative works
+✅ Use for commercial purposes
+
+### What You Must Do
+📋 Include the original license and copyright notice
+📋 Provide a copy of this LICENSE file with distributions
+📋 Document any significant modifications made
+📋 Maintain the same license for derivative works
+
+### What You Cannot Do
+❌ Hold the original author liable for any issues or damages
+❌ Remove copyright notices from the original code
+❌ Claim ownership of the original project
+❌ Use the author's name to endorse derived products without permission
+
+### Third-Party Dependencies
+
+This project uses the following open-source libraries:
+- **pyttsx3**: Text-to-speech (Apache License 2.0)
+- **SpeechRecognition**: Speech recognition (BSD 3-Clause License)
+- **google-generativeai**: Google Gemini AI integration (Apache License 2.0)
+- **pyautogui**: GUI automation (BSD 3-Clause License)
+- **requests**: HTTP library (Apache License 2.0)
+- **python-dotenv**: Environment variable management (BSD 3-Clause License)
+
+Please refer to the requirements.txt file and individual package documentation
+for complete license information.
+
+### Disclaimer
+
+This software is provided "AS IS" without warranty of any kind. The author
+assumes no responsibility for errors or omissions in the contents of this
+project.
+
+### Contact & Attribution
+
+If you use this project, attribution would be appreciated:
+- **Project:** EchoMind AI - Voice Assistant
+- **Author:** Babin Bid
+- **Repository:** https://github.com/KGFCH2/OIBSIP/tree/main/Voice%20Assistant/EchoMind%20AI
+- **Year:** 2025
+
+### Changes Log
+
+For a complete list of changes and versions, please check the git commit
+history or CHANGELOG.md if available.
+
+---
+
+**Last Updated:** November 6, 2025
+**License Version:** 1.0
