@@ -198,14 +198,14 @@ graph TB
     TTS -->|Audio| SPK
     RM -->|Logging| LOG["📊 Logger<br/>assistant.jsonl"]
     
-    style H1 fill:#e1f5ff
-    style H2 fill:#e8f5e9
-    style H3 fill:#f3e5f5
-    style H4 fill:#fff3e0
-    style H5 fill:#fce4ec
-    style H6 fill:#e0f2f1
-    style H7 fill:#f1f8e9
-    style H8 fill:#ffebee
+    style H1 fill:#e1f5ff,color:#000
+    style H2 fill:#e8f5e9,color:#000
+    style H3 fill:#f3e5f5,color:#000
+    style H4 fill:#fff3e0,color:#000
+    style H5 fill:#fce4ec,color:#000
+    style H6 fill:#e0f2f1,color:#000
+    style H7 fill:#f1f8e9,color:#000
+    style H8 fill:#ffebee,color:#000
 ```
 
 ### Command Routing Flow
@@ -241,15 +241,15 @@ flowchart TD
     P --> Q["📊 Log to<br/>assistant.jsonl"]
     Q --> R["👤 User Hears<br/>Response"]
     
-    style E fill:#e1f5ff
-    style F fill:#e8f5e9
-    style G fill:#f3e5f5
-    style H fill:#fff3e0
-    style I fill:#fce4ec
-    style J fill:#e0f2f1
-    style K fill:#f1f8e9
-    style L fill:#ffebee
-    style M fill:#ffe0b2
+    style E fill:#e1f5ff,color:#000
+    style F fill:#e8f5e9,color:#000
+    style G fill:#f3e5f5,color:#000
+    style H fill:#fff3e0,color:#000
+    style I fill:#fce4ec,color:#000
+    style J fill:#e0f2f1,color:#000
+    style K fill:#f1f8e9,color:#000
+    style L fill:#ffebee,color:#000
+    style M fill:#ffe0b2,color:#000
 ```
 
 ### Handler Priority & Routing
@@ -280,16 +280,16 @@ graph TD
     
     DONE --> OUTPUT["🔊 speak()"]
     
-    style P1 fill:#e1f5ff
-    style P2 fill:#e8f5e9
-    style P3 fill:#f3e5f5
-    style P4 fill:#fff3e0
-    style P5 fill:#fce4ec
-    style P6 fill:#e0f2f1
-    style P7 fill:#f1f8e9
-    style P8 fill:#ffebee
-    style FALLBACK fill:#ffe0b2
-    style DONE fill:#c8e6c9
+    style P1 fill:#e1f5ff,color:#000
+    style P2 fill:#e8f5e9,color:#000
+    style P3 fill:#f3e5f5,color:#000
+    style P4 fill:#fff3e0,color:#000
+    style P5 fill:#fce4ec,color:#000
+    style P6 fill:#e0f2f1,color:#000
+    style P7 fill:#f1f8e9,color:#000
+    style P8 fill:#ffebee,color:#000
+    style FALLBACK fill:#ffe0b2,color:#000
+    style DONE fill:#c8e6c9,color:#000
 ```
 
 ### Data Flow Architecture
@@ -348,20 +348,20 @@ graph TB
     I -.->|Log| L
     K -.->|Log| L
     
-    style A fill:#e3f2fd
-    style B fill:#bbdefb
-    style C fill:#90caf9
-    style D fill:#64b5f6
-    style E fill:#42a5f5
-    style F fill:#2196f3
-    style G fill:#1976d2
-    style H1 fill:#c8e6c9
-    style H2 fill:#81c784
-    style H3 fill:#ffcc80
-    style I fill:#ffe0b2
-    style J fill:#ffb74d
-    style K fill:#ffa726
-    style L fill:#a1887f
+    style A fill:#e3f2fd,color:#000
+    style B fill:#bbdefb,color:#000
+    style C fill:#90caf9,color:#000
+    style D fill:#64b5f6,color:#000
+    style E fill:#42a5f5,color:#000
+    style F fill:#2196f3,color:#fff
+    style G fill:#1976d2,color:#fff
+    style H1 fill:#c8e6c9,color:#000
+    style H2 fill:#81c784,color:#000
+    style H3 fill:#ffcc80,color:#000
+    style I fill:#ffe0b2,color:#000
+    style J fill:#ffb74d,color:#000
+    style K fill:#ffa726,color:#000
+    style L fill:#a1887f,color:#fff
 ```
 
 ---
