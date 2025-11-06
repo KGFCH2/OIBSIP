@@ -6,6 +6,13 @@ from config.settings import OS
 from utils.voice_io import speak
 from utils.logger import log_interaction
 
+# Try to import pynput for keyboard control (F5 unmute)
+try:
+    from pynput.keyboard import Controller, Key
+    PYNPUT_AVAILABLE = True
+except ImportError:
+    PYNPUT_AVAILABLE = False
+
 
 def set_volume_windows(percentage):
     """Set volume on Windows using multiple methods"""
@@ -215,10 +222,77 @@ def set_volume(percentage):
         return False
 
 
+def unmute_sound_f5():
+    """Unmute sound using F5 key - tries multiple methods for reliability"""
+    try:
+        # Method 1: Try keyboard module (most reliable for raw F5)
+        try:
+            import keyboard
+            keyboard.press_and_release('f5')
+            import time
+            time.sleep(0.3)
+            return True
+        except ImportError:
+            pass
+        except Exception as e:
+            print(f"Method 1 (keyboard module) failed: {e}")
+    except Exception:
+        pass
+    
+    try:
+        # Method 2: Try pyautogui
+        try:
+            import pyautogui
+            pyautogui.press('f5')
+            import time
+            time.sleep(0.3)
+            return True
+        except ImportError:
+            pass
+        except Exception as e:
+            print(f"Method 2 (pyautogui) failed: {e}")
+    except Exception:
+        pass
+    
+    try:
+        # Method 3: Try pynput (fallback)
+        if PYNPUT_AVAILABLE:
+            keyboard_ctrl = Controller()
+            keyboard_ctrl.press(Key.f5)
+            keyboard_ctrl.release(Key.f5)
+            import time
+            time.sleep(0.3)
+            return True
+    except Exception as e:
+        print(f"Method 3 (pynput) failed: {e}")
+    
+    return False
+
+
 def handle_volume(command):
     """Handle volume control commands"""
     if not re.search(r'\b(volume|sound|mute|unmute|increase|decrease)\b', command, re.IGNORECASE):
         return False
+    
+    # Check for unmute command specifically - use F5 key
+    if re.search(r'\bunmute\b', command, re.IGNORECASE):
+        success = unmute_sound_f5()
+        if success:
+            speak("Unmuting sound")
+            log_interaction(command, "Sound unmuted via F5", source="local")
+        else:
+            # Fallback: set volume to 60%
+            speak("Unmuting sound")
+            set_volume(60)
+            log_interaction(command, "Sound unmuted via volume", source="local")
+        return True
+    
+    # Check for mute command
+    if re.search(r'\bmute\b', command, re.IGNORECASE):
+        speak("Muting sound")
+        set_volume(0)
+        log_interaction(command, "Sound muted", source="local")
+        return True
     
     # Try to parse a percentage
     m = re.search(r"(\d{1,3})\s*%?", command)

@@ -5,3 +5,5 @@ pytz
 pyttsx3
 beautifulsoup4
 pynput
+keyboard
+pyautogui

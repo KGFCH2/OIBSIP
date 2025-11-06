@@ -326,3 +326,77 @@
 {"ts": 1762373662.9469533, "user": "f drive", "response": "I'm having trouble connecting to my AI backend right now. Please try again in a moment.", "source": "gemini_stream"}
 {"ts": 1762373678.0920508, "user": "close f drive", "response": "Could not auto-eject drive F, user action required", "source": "local"}
 {"ts": 1762373714.963919, "user": "who is hrithik roshan?", "response": "I'm having trouble connecting to my AI backend right now. Please try again in a moment.", "source": "gemini_stream"}
+{"ts": 1762443124.945347, "user": "open emoji", "response": "Emoji picker opened", "source": "local"}
+{"ts": 1762443190.7074254, "user": "charging_started", "response": "Charging in Progress", "source": "system"}
+{"ts": 1762443198.0652602, "user": "open emoji", "response": "Emoji picker opened", "source": "local"}
+{"ts": 1762443208.7051136, "user": "unmute", "response": "Sound unmuted via F5", "source": "local"}
+{"ts": 1762443374.4932914, "user": "open emoji", "response": "Emoji picker opened", "source": "local"}
+{"ts": 1762443377.8195941, "user": "unmute", "response": "Sound unmuted via F5", "source": "local"}
+{"ts": 1762443765.9710097, "user": "charging_started", "response": "Charging in Progress", "source": "system"}
+{"ts": 1762443773.7595487, "user": "open emoji", "response": "Emoji picker opened", "source": "local"}
+{"ts": 1762443786.4896696, "user": "press f1", "response": "I cannot assist with that.", "source": "gemini_stream"}
+{"ts": 1762443798.5451708, "user": "unmute", "response": "Sound unmuted via F5", "source": "local"}
+{"ts": 1762443815.0848658, "user": "open emoji", "response": "Emoji picker opened", "source": "local"}
+{"ts": 1762444098.5625145, "user": "charging_started", "response": "Charging in Progress", "source": "system"}
+{"ts": 1762444124.7709575, "user": "ramaiya vastavaiya ramaiya vastavaiya", "response": "I don't understand. Please ask a different question.", "source": "gemini_stream"}
+{"ts": 1762444199.349702, "user": "play ramaiya vastavaiya", "response": "YouTube play (direct): ramaiya vastavaiya", "source": "music"}
+{"ts": 1762444200.8648763, "user": "charging_stopped", "response": "Charger is plugged out", "source": "system"}
+{"ts": 1762444214.9768105, "user": "charging_started", "response": "Charging in Progress", "source": "system"}
+{"ts": 1762444224.8357227, "user": "ramaiya vastavaiya song on youtube", "response": "I found several versions of the \"Ramaiya Vastavaiya\" song on YouTube.", "source": "gemini_stream"}
+{"ts": 1762444240.5110266, "user": "play ramaiya vastavaiya song on youtube", "response": "YouTube play (direct): ramaiya vastavaiya song", "source": "music"}
+{"ts": 1762444263.8657203, "user": "close the current youtube tab", "response": "Closed current youtube tab using Ctrl+W", "source": "local"}
+{"ts": 1762444281.9955723, "user": "pause the music play over youtube", "response": "YouTube play (direct): over youtube", "source": "music"}
+{"ts": 1762444306.3802595, "user": "can you detect any usb?", "response": "No USB device or Pendrive is currently connected to your device.", "source": "usb_detection"}
+{"ts": 1762444310.4500287, "user": "usb_detected", "response": "USB or Pendrive Injection Detected", "source": "system"}
+{"ts": 1762444328.3285449, "user": "close the current tab", "response": "Closed active tab using Ctrl+W", "source": "local"}
+{"ts": 1762444328.329026, "user": "close the current tab", "response": "Closed current tab using Ctrl+W", "source": "local"}
+{"ts": 1762444345.9945712, "user": "what is the pendrive information connected to my device?", "response": "I am unable to access that information.", "source": "gemini_stream"}
+{"ts": 1762444363.312026, "user": "is there any pendrive connected?", "response": "USB device found: F:. You have 1 removable drive connected.", "source": "usb_detection"}
+{"ts": 1762444374.765675, "user": "eject the drive if", "response": "if what?", "source": "gemini_stream"}
+{"ts": 1762444387.2192497, "user": "f drive", "response": "I do not have access to local drives.", "source": "gemini_stream"}
+{"ts": 1762444402.7000966, "user": "eject f drive", "response": "Could not auto-eject drive F, user action required", "source": "local"}
+{"ts": 1762444407.0665696, "user": "usb_removed", "response": "Pendrive or USB Removed", "source": "system"}
+{"ts": 1762444422.543072, "user": "open emoji", "response": "Opening emoji via Windows Search", "source": "windows_search"}
+{"ts": 1762444442.9457595, "user": "open emoji by another method", "response": "Opening emoji via Windows Search", "source": "windows_search"}
+{"ts": 1762444452.6291497, "user": "by another method", "response": "What is your question?", "source": "gemini_stream"}
+{"ts": 1762444473.2213273, "user": "totally unmute my device", "response": "I do not have the capability to directly control your device's mute status. You will need to unmute it manually through your device's settings.", "source": "gemini_stream"}
+{"ts": 1762444487.848716, "user": "crow emoji picker", "response": "I cannot directly display or provide emoji images.", "source": "gemini_stream"}
+{"ts": 1762444501.2164023, "user": "show emoji picker", "response": "I am unable to directly show you an emoji picker.", "source": "gemini_stream"}
+{"ts": 1762444520.6331127, "user": "open emoji speaker", "response": "Opening emoji via Windows Search", "source": "windows_search"}
+{"ts": 1762444530.4372299, "user": "speaker", "response": "What day of the week is Christmas this year?", "source": "gemini_stream"}
+{"ts": 1762444677.513942, "user": "charging_started", "response": "Charging in Progress", "source": "system"}
+{"ts": 1762444691.3251102, "user": "do you know who is my father?", "response": "As an AI, I have no way of knowing who your father is.", "source": "gemini_stream"}
+{"ts": 1762444705.48601, "user": "my father is ranjeet beed?", "response": "I don't have access to personal information.", "source": "gemini_stream"}
+{"ts": 1762444723.774534, "user": "open emoji", "response": "Opening emoji via Windows Search", "source": "windows_search"}
+{"ts": 1762445004.3840983, "user": "charging_started", "response": "Charging in Progress", "source": "system"}
+{"ts": 1762445018.9771993, "user": "open emo", "response": "Opening emo via Windows Search", "source": "windows_search"}
+{"ts": 1762445030.7368765, "user": "show emoji", "response": "🤔", "source": "gemini_stream"}
+{"ts": 1762445049.7088842, "user": "open emoji", "response": "Opening emoji via Windows Search", "source": "windows_search"}
+{"ts": 1762445117.1088245, "user": "charging_started", "response": "Charging in Progress", "source": "system"}
+{"ts": 1762445126.9940052, "user": "show emoji", "response": "😊", "source": "gemini_stream"}
+{"ts": 1762445144.2765763, "user": "open emoji", "response": "Opening emoji via Windows Search", "source": "windows_search"}
+{"ts": 1762445469.9713566, "user": "charging_started", "response": "Charging in Progress", "source": "system"}
+{"ts": 1762445486.829601, "user": "show emoji", "response": "Okay, here are some emojis: 😊👍🎉🔥🤔", "source": "gemini_stream"}
+{"ts": 1762445505.5451896, "user": "open emoji", "response": "Opening emoji via Windows Search", "source": "windows_search"}
+{"ts": 1762445657.5681937, "user": "charging_started", "response": "Charging in Progress", "source": "system"}
+{"ts": 1762445672.017274, "user": "open emo", "response": "Opening emo via Windows Search", "source": "windows_search"}
+{"ts": 1762445689.441622, "user": "open emoji", "response": "Opening emoji via Windows Search", "source": "windows_search"}
+{"ts": 1762445708.3409736, "user": "bhagwan krishna bhajan", "response": "Sorry, I don't have a specific bhajan to recommend right now.", "source": "gemini_stream"}
+{"ts": 1762445720.3167527, "user": "emoji", "response": "👍", "source": "gemini_stream"}
+{"ts": 1762445749.3768618, "user": "hello hello hello", "response": "Hello! How can I help you?", "source": "local"}
+{"ts": 1762445771.1661541, "user": "who creates you", "response": "I was created by Google.", "source": "gemini_stream"}
+{"ts": 1762445792.9656267, "user": "who is the creator of echo mind ai?", "response": "I do not have information about the creator of Echo Mind AI.", "source": "gemini_stream"}
+{"ts": 1762445812.8111868, "user": "open emoji", "response": "Opening emoji via Windows Search", "source": "windows_search"}
+{"ts": 1762445852.6569319, "user": "show emoji", "response": "😊", "source": "gemini_stream"}
+{"ts": 1762445880.7691956, "user": "please open emoji", "response": "Opening emoji via Windows Search", "source": "windows_search"}
+{"ts": 1762446027.394037, "user": "charging_started", "response": "Charging in Progress", "source": "system"}
+{"ts": 1762446040.0158858, "user": "increase brightness 200", "response": "Brightness increase requested", "source": "local"}
+{"ts": 1762446040.016397, "user": "increase brightness 200", "response": "Brightness command", "source": "local"}
+{"ts": 1762446054.690292, "user": "set brightness 100", "response": "Set brightness to 100%", "source": "local"}
+{"ts": 1762446070.37264, "user": "set brightness 50 %", "response": "Set brightness to 50%", "source": "local"}
+{"ts": 1762446079.509371, "user": "emoji mod", "response": "Emoji picker opened (Win+.)", "source": "local"}
+{"ts": 1762446088.6444492, "user": "when emoji?", "response": "Emoji picker opened (Win+.)", "source": "local"}
+{"ts": 1762446098.2251563, "user": "emoji", "response": "Emoji picker opened (Win+.)", "source": "local"}
+{"ts": 1762446107.8028193, "user": "show emoji", "response": "Emoji picker opened (Win+.)", "source": "local"}
+{"ts": 1762446120.4613028, "user": "give me some emoji by your own", "response": "Emoji picker opened (Win+.)", "source": "local"}
+{"ts": 1762446217.4807014, "user": "charging_started", "response": "Charging in Progress", "source": "system"}

@@ -22,9 +22,8 @@ from handlers.file_writing_handler import handle_file_writing
 from handlers.app_handler import handle_app_opening
 from handlers.personal_handler import handle_personal_questions
 from handlers.text_input_handler import handle_text_input
-from handlers.volume_handler import handle_volume
 from handlers.brightness_handler import handle_brightness
-from handlers.emoji_handler import handle_emoji_mode
+from handlers.resume_handler import handle_resume_opening
 from handlers.close_app_handler import handle_app_closing
 from handlers.tab_navigation_handler import handle_tab_navigation
 from handlers.system_folder_handler import handle_system_folder_opening
@@ -39,6 +38,10 @@ from utils.text_processing import convert_spoken_symbols, is_symbol_only, ensure
 from utils.time_utils import get_greeting
 from utils.logger import log_interaction
 
+# Import specific functions for global hotkeys
+from handlers.emoji_handler import open_emoji, handle_emoji_mode
+from handlers.volume_handler import unmute_sound_f5
+
 # Import Gemini client
 import gemini_client
 
@@ -49,8 +52,10 @@ def route_command(command):
         ("Text input", handle_text_input),
         ("Thank you", handle_thank_you),
         ("Greeting", handle_greeting),
+        ("Emoji mode", handle_emoji_mode),
         ("Time", handle_time),
         ("Date", handle_date),
+        ("Resume opening", handle_resume_opening),  # NEW - Resume file handler
         ("USB detection", handle_usb_detection),
         ("Browser search", handle_browser_search),
         ("Website opening", handle_website_opening),
@@ -65,9 +70,7 @@ def route_command(command):
         ("System folder opening", handle_system_folder_opening),
         ("App opening", handle_app_opening),
         ("Personal questions", handle_personal_questions),
-        ("Volume control", handle_volume),
         ("Brightness control", handle_brightness),
-        ("Emoji mode", handle_emoji_mode),
         ("Tab navigation", handle_tab_navigation),
         ("App closing", handle_app_closing),
         ("Exit", handle_exit),
@@ -170,6 +173,56 @@ def main():
     # Start background monitoring threads
     start_battery_monitoring()
     start_usb_monitoring()
+    
+    # Setup global hotkeys (F1 -> Win+. for emoji picker, F5 -> unmute)
+    try:
+        # Prefer pynput for global listening
+        from pynput import keyboard as _pynput_keyboard
+
+        def _on_press(key):
+            try:
+                if key == _pynput_keyboard.Key.f1:
+                    print("Global hotkey: F1 pressed -> sending Win+. to open emoji picker")
+                    try:
+                        open_emoji()
+                        log_interaction("F1 (hotkey)", "Win+. sent for emoji picker", source="hotkey")
+                    except Exception as e:
+                        print(f"Error opening emoji from hotkey: {e}")
+                elif key == _pynput_keyboard.Key.f5:
+                    print("Global hotkey: F5 pressed -> unmuting sound")
+                    try:
+                        unmute_sound_f5()
+                        log_interaction("F5 (hotkey)", "Sound unmuted", source="hotkey")
+                    except Exception as e:
+                        print(f"Error unmuting sound from hotkey: {e}")
+            except Exception:
+                pass
+
+        _listener = _pynput_keyboard.Listener(on_press=_on_press)
+        _listener.daemon = True
+        _listener.start()
+        print("Global hotkey listener started (pynput)")
+    except Exception:
+        # Fallback to keyboard module if pynput is not available
+        try:
+            import keyboard as _keyboard
+
+            try:
+                def _f1_hotkey():
+                    print('Hotkey f1 -> Win+. for emoji')
+                    try:
+                        open_emoji()
+                        log_interaction('F1 (hotkey)', 'Win+. sent for emoji picker', source='hotkey')
+                    except Exception as e:
+                        print(f"F1 hotkey error: {e}")
+
+                _keyboard.add_hotkey('f1', _f1_hotkey)
+                _keyboard.add_hotkey('f5', lambda: (print('Hotkey f5 -> unmute'), unmute_sound_f5(), log_interaction('F5 (hotkey)', 'Sound unmuted', source='hotkey')))
+                print("Global hotkey listener started (keyboard module)")
+            except Exception as e:
+                print(f"Failed to register hotkeys with keyboard module: {e}")
+        except Exception:
+            print("No global hotkey support available (pynput and keyboard modules missing)")
     
     greeting = get_greeting()
     speak(greeting)

@@ -5,7 +5,6 @@
 > Advanced Python-based voice assistant with natural language processing, intelligent command routing, and multiple integration features.
 
 **Author:** Babin Bid  
-**Repository:** https://github.com/KGFCH2/OIBSIP/tree/main/Voice%20Assistant/EchoMind%20AI  
 **License:** MIT License
 
 ---
@@ -146,18 +145,18 @@ graph TB
     
     subgraph "Core Processing"
         RM["Request Manager<br/>route_command()"]
-        HDB["Handler Database<br/>23+ Handlers"]
+        HDB["Handler Database<br/>23 Handlers"]
     end
     
-    subgraph "Handlers"
-        H1["Time/Date Handler"]
-        H2["Weather Handler"]
-        H3["App Handler"]
-        H4["Tab Navigation"]
-        H5["System Folder Handler"]
-        H6["Voice Volume"]
-        H7["Gemini Fallback"]
-        H8["... More Handlers"]
+    subgraph "Priority Handlers"
+        H1["Text/Greeting"]
+        H2["Time/Date"]
+        H3["Resume/USB"]
+        H4["Web/Weather"]
+        H5["File/Music"]
+        H6["System Control"]
+        H7["App Management"]
+        H8["Exit Handler"]
     end
     
     subgraph "External APIs"
@@ -174,14 +173,14 @@ graph TB
     MIC -->|Audio Stream| SR
     SR -->|Text| RM
     RM -->|Route| HDB
-    HDB -->|Dispatch| H1
-    HDB -->|Dispatch| H2
-    HDB -->|Dispatch| H3
-    HDB -->|Dispatch| H4
-    HDB -->|Dispatch| H5
-    HDB -->|Dispatch| H6
-    HDB -->|Dispatch| H7
-    HDB -->|Dispatch| H8
+    HDB -->|Priority 1-3| H1
+    HDB -->|Priority 4-5| H2
+    HDB -->|Priority 6-7| H3
+    HDB -->|Priority 8-10| H4
+    HDB -->|Priority 11-12| H5
+    HDB -->|Priority 13-15| H6
+    HDB -->|Priority 16-17| H7
+    HDB -->|Priority 18| H8
     
     H1 -->|Result| RM
     H2 -->|Result| RM
@@ -189,14 +188,24 @@ graph TB
     H4 -->|Result| RM
     H5 -->|Result| RM
     H6 -->|Result| RM
-    H7 -->|Query| GEMINI
-    H7 -->|Response| RM
-    H2 -->|Query| WEATHER
-    H3 -->|System Call| WINDOWS
+    H7 -->|Result| RM
+    H8 -->|Result| RM
+    
+    RM -->|No Match| GEMINI
+    GEMINI -->|Response| RM
     
     RM -->|Text/Stream| TTS
     TTS -->|Audio| SPK
     RM -->|Logging| LOG["📊 Logger<br/>assistant.jsonl"]
+    
+    style H1 fill:#e1f5ff
+    style H2 fill:#e8f5e9
+    style H3 fill:#f3e5f5
+    style H4 fill:#fff3e0
+    style H5 fill:#fce4ec
+    style H6 fill:#e0f2f1
+    style H7 fill:#f1f8e9
+    style H8 fill:#ffebee
 ```
 
 ### Command Routing Flow
@@ -205,62 +214,82 @@ graph TB
 flowchart TD
     A["👂 User Speaks<br/>Command"] --> B["🎯 listen()<br/>Speech to Text"]
     B --> C["📝 Text Command<br/>Received"]
-    C --> D{"Command Type?"}
+    C --> D{"Route Command<br/>to Handlers"}
     
-    D -->|Simple Greeting| E["😊 Greeting Handler"]
-    D -->|Time/Date| F["⏰ Time/Date Handler"]
-    D -->|Weather| G["🌤️ Weather Handler"]
-    D -->|File Operation| H["📁 File Handler"]
-    D -->|App Operation| I["💻 App Handler"]
-    D -->|Tab Navigation| J["📑 Tab Handler"]
-    D -->|System Folder| K["📂 Folder Handler"]
-    D -->|Drive Operation| K
-    D -->|Volume Control| L["🔊 Volume Handler"]
-    D -->|Battery Status| M["🔋 Battery Handler"]
-    D -->|USB Detection| N["💾 USB Handler"]
-    D -->|Unknown Query| O["🤖 Gemini AI<br/>Fallback"]
+    D -->|Priority 1-3| E["Text Input<br/>Greeting<br/>Thank You"]
+    D -->|Priority 4-5| F["Emoji Mode<br/>Time/Date"]
+    D -->|Priority 6-7| G["Resume<br/>USB Detection"]
+    D -->|Priority 8-10| H["Browser Search<br/>Website<br/>Weather"]
+    D -->|Priority 11-12| I["WhatsApp<br/>Battery<br/>Music"]
+    D -->|Priority 13-15| J["File Ops<br/>System Folders<br/>Brightness"]
+    D -->|Priority 16-17| K["Volume Control<br/>Tab Navigation<br/>App Control"]
+    D -->|Priority 18| L["Exit Command"]
+    D -->|No Match| M["🤖 Gemini AI<br/>Fallback"]
     
-    E --> P["Generate Response"]
-    F --> P
-    G --> P
-    H --> P
-    I --> P
-    J --> P
-    K --> P
-    L --> P
-    M --> P
-    N --> P
-    O --> P
+    E --> N["Generate<br/>Response"]
+    F --> N
+    G --> N
+    H --> N
+    I --> N
+    J --> N
+    K --> N
+    L --> N
+    M --> N
     
-    P --> Q["✅ Format Response<br/>with ? if question"]
-    Q --> R["🔊 speak()<br/>Text to Speech"]
-    R --> S["📊 Log to<br/>assistant.jsonl"]
-    S --> T["👤 User Hears<br/>Response"]
+    N --> O["✅ Format Response<br/>with ? if question"]
+    O --> P["🔊 speak()<br/>Text to Speech"]
+    P --> Q["📊 Log to<br/>assistant.jsonl"]
+    Q --> R["👤 User Hears<br/>Response"]
+    
+    style E fill:#e1f5ff
+    style F fill:#e8f5e9
+    style G fill:#f3e5f5
+    style H fill:#fff3e0
+    style I fill:#fce4ec
+    style J fill:#e0f2f1
+    style K fill:#f1f8e9
+    style L fill:#ffebee
+    style M fill:#ffe0b2
 ```
 
 ### Handler Priority & Routing
 
 ```mermaid
-graph LR
-    CMD["Command Input"]
+graph TD
+    CMD["📥 Command Input"]
     
-    CMD --> P1["Priority 1<br/>Text Input<br/>Greeting<br/>Time/Date"]
-    P1 --> P2["Priority 2<br/>USB Detection<br/>Search<br/>Website"]
-    P2 --> P3["Priority 3<br/>Weather<br/>WhatsApp<br/>File Ops"]
-    P3 --> P4["Priority 4<br/>Music<br/>Battery<br/>File Writing"]
-    P4 --> P5["Priority 5<br/>System Folder<br/>App Opening"]
-    P5 --> P6["Priority 6<br/>Volume<br/>Tab Navigation<br/>App Closing"]
-    P6 --> P7["Priority 7<br/>Exit"]
-    P7 --> P8["⚠️ Fallback<br/>Gemini AI"]
+    CMD --> P1["🔵 Priority 1-3<br/>Text Input | Greeting<br/>Thank You"]
+    P1 --> P2["🟢 Priority 4-5<br/>Emoji Mode | Time/Date"]
+    P2 --> P3["🟡 Priority 6-7<br/>Resume Opening<br/>USB Detection"]
+    P3 --> P4["🟠 Priority 8-10<br/>Browser Search<br/>Website | Weather"]
+    P4 --> P5["🔴 Priority 11-12<br/>WhatsApp | Battery<br/>Music Operations"]
+    P5 --> P6["🟣 Priority 13-15<br/>File Operations<br/>System Folders<br/>Brightness"]
+    P6 --> P7["🟦 Priority 16-17<br/>Volume Control<br/>Tab Navigation<br/>App Control"]
+    P7 --> P8["⚫ Priority 18<br/>Exit Handler"]
     
-    P1 -.->|Match| DONE1["✅ Done<br/>Return Response"]
-    P2 -.->|Match| DONE1
-    P3 -.->|Match| DONE1
-    P4 -.->|Match| DONE1
-    P5 -.->|Match| DONE1
-    P6 -.->|Match| DONE1
-    P7 -.->|Match| DONE1
-    P8 -.->|Match| DONE1
+    P1 -.->|Match Found| DONE["✅ Response<br/>Generated"]
+    P2 -.->|Match Found| DONE
+    P3 -.->|Match Found| DONE
+    P4 -.->|Match Found| DONE
+    P5 -.->|Match Found| DONE
+    P6 -.->|Match Found| DONE
+    P7 -.->|Match Found| DONE
+    P8 -.->|Match Found| DONE
+    P8 -->|No Match| FALLBACK["🤖 Gemini AI<br/>Fallback"]
+    FALLBACK --> DONE
+    
+    DONE --> OUTPUT["🔊 speak()"]
+    
+    style P1 fill:#e1f5ff
+    style P2 fill:#e8f5e9
+    style P3 fill:#f3e5f5
+    style P4 fill:#fff3e0
+    style P5 fill:#fce4ec
+    style P6 fill:#e0f2f1
+    style P7 fill:#f1f8e9
+    style P8 fill:#ffebee
+    style FALLBACK fill:#ffe0b2
+    style DONE fill:#c8e6c9
 ```
 
 ### Data Flow Architecture
@@ -269,7 +298,7 @@ graph LR
 graph TB
     subgraph "Input Layer"
         A["🎤 Audio Stream"]
-        B["🎙️ Speech Recognition"]
+        B["🎙️ Speech Recognition<br/>Google API"]
         C["📝 Text Command"]
     end
     
@@ -277,23 +306,23 @@ graph TB
         D["🔄 Text Normalization"]
         E["🔍 Symbol Conversion"]
         F["✨ Question Mark Detection"]
-        G["🧭 Command Routing"]
+        G["🧭 Command Routing<br/>route_command()"]
     end
     
-    subgraph "Handler Layer"
-        H1["Handler 1"]
-        H2["Handler 2"]
-        H3["Handler N"]
+    subgraph "Handler Execution"
+        H1["Handler 1<br/>Text/Greeting"]
+        H2["Handler 2-18<br/>Domain Specific"]
+        H3["Fallback<br/>Gemini AI"]
     end
     
     subgraph "Output Layer"
         I["📄 Format Response"]
-        J["🎙️ Text to Speech"]
+        J["🎙️ Text to Speech<br/>pyttsx3"]
         K["🔊 Audio Output"]
     end
     
     subgraph "Persistence"
-        L["📊 Logging<br/>assistant.jsonl"]
+        L["📊 JSON Logging<br/>assistant.jsonl"]
     end
     
     A --> B
@@ -303,9 +332,9 @@ graph TB
     E --> F
     F --> G
     
-    G -->|Route| H1
-    G -->|Route| H2
-    G -->|Route| H3
+    G -->|Priority 1-18| H1
+    G -->|Try Handlers| H2
+    G -->|No Match| H3
     
     H1 -->|Response| I
     H2 -->|Response| I
@@ -314,9 +343,25 @@ graph TB
     I --> J
     J --> K
     
-    K -.->|Logged| L
-    C -.->|Logged| L
-    G -.->|Logged| L
+    C -.->|Log| L
+    G -.->|Log| L
+    I -.->|Log| L
+    K -.->|Log| L
+    
+    style A fill:#e3f2fd
+    style B fill:#bbdefb
+    style C fill:#90caf9
+    style D fill:#64b5f6
+    style E fill:#42a5f5
+    style F fill:#2196f3
+    style G fill:#1976d2
+    style H1 fill:#c8e6c9
+    style H2 fill:#81c784
+    style H3 fill:#ffcc80
+    style I fill:#ffe0b2
+    style J fill:#ffb74d
+    style K fill:#ffa726
+    style L fill:#a1887f
 ```
 
 ---
@@ -446,7 +491,7 @@ EchoMind AI/
 │   ├── __init__.py
 │   ├── __pycache__/
 │   └── settings.py                # Settings & constants
-├── 🗂️ handlers/                   # Command handlers (22+)
+├── 🗂️ handlers/                   # Command handlers (23)
 │   ├── __init__.py
 │   ├── __pycache__/
 │   ├── app_handler.py             # App opening/launching
@@ -461,6 +506,7 @@ EchoMind AI/
 │   ├── greeting_handler.py        # Greeting responses
 │   ├── music_handler.py           # Music playback
 │   ├── personal_handler.py        # Personal questions
+│   ├── resume_handler.py          # Resume file opening
 │   ├── simple_weather_handler.py  # Simple weather queries
 │   ├── system_folder_handler.py   # Folder & drive operations
 │   ├── tab_navigation_handler.py  # Tab navigation (Ctrl+N)
@@ -531,6 +577,7 @@ EchoMind AI/
 | "Open drive C" | Opens C:\ drive |
 | "Close drive E" | Safely ejects E: |
 | "Write file" | Creates/writes file |
+| "Open resume" | Opens resume document |
 
 ### Browser & Web
 | Say | Response |
@@ -572,18 +619,22 @@ Each handler is a specialized module that:
 Commands are checked in this order:
 1. Text input mode
 2. Greeting & thank you
-3. Time & date
-4. USB & search
-5. Website & weather
-6. Battery & media
-7. File operations
-8. System folders
-9. App launching
-10. Personal questions
-11. Volume control
-12. Tab navigation & app closing
-13. Exit command
-14. **Gemini AI Fallback** (for unmatched queries)
+3. Emoji mode
+4. Time & date
+5. Resume file opening
+6. USB & search
+7. Website & weather
+8. Battery & media
+9. File operations
+10. Music & file writing
+11. File & system folder operations
+12. App launching
+13. Personal questions
+14. Brightness control
+15. Volume control & tab navigation
+16. App closing
+17. Exit command
+18. **Gemini AI Fallback** (for unmatched queries)
 
 ### Adding Custom Handlers
 
