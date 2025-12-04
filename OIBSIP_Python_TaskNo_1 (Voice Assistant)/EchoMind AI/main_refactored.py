@@ -31,6 +31,7 @@ from handlers.music_handler import handle_play_music, handle_play_on_youtube
 from handlers.exit_handler import handle_exit
 from handlers.battery_handler import handle_battery_status, start_battery_monitoring, stop_battery_monitoring
 from handlers.usb_detection_handler import handle_usb_detection, start_usb_monitoring, stop_usb_monitoring
+from handlers.volume_handler import handle_volume
 
 # Import utilities
 from utils.voice_io import speak, listen, speak_stream
@@ -40,7 +41,7 @@ from utils.logger import log_interaction
 
 # Import specific functions for global hotkeys
 from handlers.emoji_handler import open_emoji, handle_emoji_mode
-from handlers.volume_handler import unmute_sound_f5
+from handlers.volume_handler import press_f5_key
 
 # Import Gemini client
 import gemini_client
@@ -63,6 +64,7 @@ def route_command(command):
         ("Weather", handle_weather),
         ("WhatsApp", handle_whatsapp_web),
         ("Battery status", handle_battery_status),
+        ("Volume control", handle_volume),
         ("File writing", handle_file_writing),
         ("Music (YouTube play)", handle_play_on_youtube),
         ("Music (play)", handle_play_music),
@@ -189,12 +191,12 @@ def main():
                     except Exception as e:
                         print(f"Error opening emoji from hotkey: {e}")
                 elif key == _pynput_keyboard.Key.f5:
-                    print("Global hotkey: F5 pressed -> unmuting sound")
+                    print("Global hotkey: F5 pressed -> pressing F5 key for mute/unmute")
                     try:
-                        unmute_sound_f5()
-                        log_interaction("F5 (hotkey)", "Sound unmuted", source="hotkey")
+                        press_f5_key()
+                        log_interaction("F5 (hotkey)", "F5 key pressed for mute/unmute", source="hotkey")
                     except Exception as e:
-                        print(f"Error unmuting sound from hotkey: {e}")
+                        print(f"Error pressing F5 from hotkey: {e}")
             except Exception:
                 pass
 
@@ -217,7 +219,7 @@ def main():
                         print(f"F1 hotkey error: {e}")
 
                 _keyboard.add_hotkey('f1', _f1_hotkey)
-                _keyboard.add_hotkey('f5', lambda: (print('Hotkey f5 -> unmute'), unmute_sound_f5(), log_interaction('F5 (hotkey)', 'Sound unmuted', source='hotkey')))
+                _keyboard.add_hotkey('f5', lambda: (print('Hotkey f5 -> press F5 for mute/unmute'), press_f5_key(), log_interaction('F5 (hotkey)', 'F5 key pressed for mute/unmute', source='hotkey')))
                 print("Global hotkey listener started (keyboard module)")
             except Exception as e:
                 print(f"Failed to register hotkeys with keyboard module: {e}")
